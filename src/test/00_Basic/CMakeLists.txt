@@ -1,6 +1,6 @@
 # Project name, default is the directory name
 GET_DIR_NAME(DIRNAME)
-SET(TARGET_NAME "${TARGET_PREFIX}${DIRNAME}")
+SET(TARGET_NAME "${DIRNAME}")
 # Use ';' to separate multiple directories
 FILE(GLOB SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/*.cxx"
@@ -10,4 +10,5 @@ FILE(GLOB SOURCES
 
 # Use ';' to separate multiple libraries
 SET(LIBRARIES "")
-ADD_TARGET(MODE ${MODE} NAME "${PROJECT_NAME}_${TARGET_NAME}" SOURCES ${SOURCES} LIBS ${LIBRARIES})
+
+ADD_TARGET(MODE "EXE" NAME "${PROJECT_NAME}_${TARGET_NAME}" SOURCES ${SOURCES} LIBS ${LIBRARIES})
