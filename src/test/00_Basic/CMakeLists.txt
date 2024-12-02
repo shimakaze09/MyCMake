@@ -2,11 +2,7 @@
 GET_DIR_NAME(DIRNAME)
 SET(TARGET_NAME "${DIRNAME}")
 # Use ';' to separate multiple directories
-FILE(GLOB SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cxx"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.hxx"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.inl"
-)
+ADD_CURRENT_PATH_SRCS(SOURCES)
 
 # Use ';' to separate multiple libraries
 SET(LIBRARIES "")
