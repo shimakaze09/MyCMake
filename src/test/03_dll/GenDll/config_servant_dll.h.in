@@ -1,0 +1,14 @@
+#ifndef CONFIG_SERVANT_DLL_H
+#define CONFIG_SERVANT_DLL_H
+
+#ifdef _WIN32
+#ifdef @CONFIG_TARGET_NAME@_EXPORTS
+#define DLL_SPEC __declspec(dllexport)
+#else
+#define DLL_SPEC __declspec(dllimport)
+#endif
+#else  // Not Windows
+#define DLL_SPEC
+#endif
+
+#endif  // CONFIG_SERVANT_DLL_H

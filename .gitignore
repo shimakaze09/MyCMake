@@ -556,3 +556,6 @@ FodyWeavers.xsd
 
 # Build output
 build/**
+
+# Config files
+**/*config*.h
