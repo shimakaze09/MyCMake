@@ -1,11 +1,6 @@
-# Project name, default is the directory name
-GET_DIR_NAME(DIRNAME)
-SET(TARGET_NAME "${DIRNAME}")
-
-# Use ';' to separate multiple directories
 GLOBAL_GROUP_SOURCES(RST SOURCES PATHS
         ${CMAKE_CURRENT_SOURCE_DIR}
         "${PROJECT_SOURCE_DIR}/include/test_02_lib"
 )
 
-ADD_TARGET(MODE "LIB" NAME ${TARGET_NAME} SOURCES ${SOURCES})
+ADD_TARGET(MODE "LIB" SOURCES ${SOURCES})
