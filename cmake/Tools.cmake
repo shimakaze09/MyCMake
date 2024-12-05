@@ -21,8 +21,7 @@
 #
 # ----------------------------------------------------------------------------
 #
-# ADD_SUB_DIRS(<NEED_APPEND>)
-# - NEED_APPEND: ON/OFF, append target folder path with current directory name.
+# ADD_SUB_DIRS()
 # - Add all subdirectories.
 #
 # ----------------------------------------------------------------------------
@@ -38,15 +37,25 @@
 #
 # ----------------------------------------------------------------------------
 #
-# ADD_TARGET_GDR(MODE <MODE> NAME <NAME> SOURCES <SOURCES_LIST> LIBS_GENERAL <LIBS_GENERAL_LIST> LIBS_DEBUG <LIBS_DEBUG_LIST> LIBS_RELEASE <LIBS_RELEASE_LIST>)
-# - Mode: EXE, LIB, DLL
-# - LIBS_GENERAL_LIST: auto add debug prefix in debug mode
-# - Auto set the folder, target prefix and some properties.
+# GET_TARGET_NAME(<RST> <TARGET_PATH>)
+# - Get target name at <TARGET_PATH>.
 #
 # ----------------------------------------------------------------------------
 #
-# ADD_TARGET(MODE <MODE> NAME <NAME> SOURCES <SOURCES_LIST> LIBS <LIBS_LIST>)
-# - Call ADD_TARGET_GDR with LIBS_DEBUG and LIBS_RELEASE empty.
+# ADD_TARGET_GDR(MODE <MODE> [SOURCE <SOURCE_LIST>] 
+#                [LIBS_GENERAL <LIBS_GENERAL_LIST>] 
+#                [LIBS_DEBUG <LIBS_DEBUG_LIST>]
+#                [LIBS_RELEASE <LIBS_RELEASE_LIST>])
+# - MODE: EXE, LIB, DLL
+# - SOURCE: Source files.
+# - LIBS_DEBUG: auto add debug postfix.
+# - SOURCE_LIST: If empty, auto glob all source files in current directory.
+# - Auto set target name, folder, and some properties.
+# 
+# ----------------------------------------------------------------------------
+#
+# ADD_TARGET(MODE <MODE> [SOURCE <SOURCE_LIST>] [LIBS <LIBS_LIST>])
+# - Call ADD_TARGET(MODE <MODE> SOURCE <SOURCE_LIST> LIBS_GENERAL <LIBS_LIST>)
 #
 # ----------------------------------------------------------------------------
 #
@@ -90,12 +99,7 @@ FUNCTION(GET_DIR_NAME DIR_NAME)
     SET(${DIR_NAME} ${TMP} PARENT_SCOPE)
 ENDFUNCTION()
 
-FUNCTION(ADD_SUB_DIRS NEED_APPEND)
-    IF (${NEED_APPEND})
-        GET_DIR_NAME(DIR_NAME)
-        LIST(APPEND FOLDERS ${DIR_NAME})
-    ENDIF ()
-
+FUNCTION(ADD_SUB_DIRS)
     FILE(GLOB CHILDREN RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
     SET(DIR_LIST "")
     FOREACH (CHILD ${CHILDREN})
@@ -163,29 +167,18 @@ FUNCTION(GLOBAL_GROUP_SOURCES)
     SET(${ARG_RST} ${SOURCES} PARENT_SCOPE)
 ENDFUNCTION()
 
+FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
+    FILE(RELATIVE_PATH TARGET_RELATIVE_PATH "${CMAKE_SOURCE_DIR}/src" ${TARGET_PATH})
+    STRING(REPLACE "/" "_" TARGET_NAME "${PROJECT_NAME}/${TARGET_RELATIVE_PATH}")
+    SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
+ENDFUNCTION()
+
 FUNCTION(ADD_TARGET_GDR)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;NAME" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
 
-    LIST_CHANGE_SEPARATOR(RST FOLDER_PREFIX SEPARATOR "_" LIST ${FOLDERS})
-    LIST_CHANGE_SEPARATOR(RST FOLDER_PATH SEPARATOR "/" LIST ${FOLDERS})
-
-    IF ("${FOLDER_PATH}" STREQUAL "")
-        SET(FOLDER_PATH "${PROJECT_NAME}")
-    ELSE ()
-        SET(FOLDER_PATH "${PROJECT_NAME}/${FOLDER_PATH}")
-    ENDIF ()
-
-    IF ("${ARG_NAME}" STREQUAL "")
-        GET_DIR_NAME(DIR_NAME)
-        SET(ARG_NAME ${DIR_NAME})
-    ENDIF ()
-
-    LIST(LENGTH FOLDERS FOLDER_NUM)
-    IF (${FOLDER_NUM} EQUAL 0)
-        SET(TARGET_NAME "${PROJECT_NAME}_${ARG_NAME}")
-    ELSE ()
-        SET(TARGET_NAME "${PROJECT_NAME}_${FOLDER_PREFIX}_${ARG_NAME}")
-    ENDIF ()
+    FILE(RELATIVE_PATH TARGET_RELATIVE_PATH "${CMAKE_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    SET(FOLDER_PATH "${PROJECT_NAME}/${TARGET_RELATIVE_PATH}")
+    GET_TARGET_NAME(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR})
 
     LIST(LENGTH ARG_SOURCES SOURCE_NUM)
     IF (${SOURCE_NUM} EQUAL 0)
@@ -269,8 +262,8 @@ FUNCTION(ADD_TARGET_GDR)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;NAME" "SOURCES;LIBS" ${ARGN})
-    ADD_TARGET_GDR(MODE ${ARG_MODE} NAME ${ARG_NAME} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS} LIBS_DEBUG "" LIBS_RELEASE "")
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE" "SOURCES;LIBS" ${ARGN})
+    ADD_TARGET_GDR(MODE ${ARG_MODE} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()
 
 FUNCTION(QT_BEGIN)
