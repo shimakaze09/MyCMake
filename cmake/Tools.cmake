@@ -42,23 +42,6 @@
 #
 # ----------------------------------------------------------------------------
 #
-# ADD_TARGET_GDR(MODE <MODE> [SOURCE <SOURCE_LIST>] 
-#                [LIBS_GENERAL <LIBS_GENERAL_LIST>] 
-#                [LIBS_DEBUG <LIBS_DEBUG_LIST>]
-#                [LIBS_RELEASE <LIBS_RELEASE_LIST>])
-# - MODE: EXE, LIB, DLL
-# - SOURCE: Source files.
-# - LIBS_DEBUG: auto add debug postfix.
-# - SOURCE_LIST: If empty, auto glob all source files in current directory.
-# - Auto set target name, folder, and some properties.
-# 
-# ----------------------------------------------------------------------------
-#
-# ADD_TARGET(MODE <MODE> [SOURCE <SOURCE_LIST>] [LIBS <LIBS_LIST>])
-# - Call ADD_TARGET(MODE <MODE> SOURCE <SOURCE_LIST> LIBS_GENERAL <LIBS_LIST>)
-#
-# ----------------------------------------------------------------------------
-#
 # QT_BEGIN()
 # - Call it before adding Qt target.
 #
@@ -66,6 +49,23 @@
 #
 # QT_END()
 # - Call it after adding Qt target.
+#
+# ----------------------------------------------------------------------------
+#
+# ADD_TARGET_GDR(MODE <MODE> [SOURCE <SOURCE_LIST>]
+#                [LIBS_GENERAL <LIBS_GENERAL_LIST>]
+#                [LIBS_DEBUG <LIBS_DEBUG_LIST>]
+#                [LIBS_RELEASE <LIBS_RELEASE_LIST>])
+# - MODE: EXE, LIB, DLL
+# - SOURCE: Source files.
+# - LIBS_DEBUG: auto add debug postfix.
+# - SOURCE_LIST: If empty, auto glob all source files in current directory.
+# - Auto set target name, folder, and some properties.
+#
+# ----------------------------------------------------------------------------
+#
+# ADD_TARGET(MODE <MODE> [SOURCE <SOURCE_LIST>] [LIBS <LIBS_LIST>])
+# - Call ADD_TARGET(MODE <MODE> SOURCE <SOURCE_LIST> LIBS_GENERAL <LIBS_LIST>)
 #
 # ----------------------------------------------------------------------------
 
@@ -117,9 +117,13 @@ FUNCTION(GROUP_SOURCES)
     CMAKE_PARSE_ARGUMENTS("ARG" "" "PATH" "SOURCES" ${ARGN})
 
     SET(HEADERS ${ARG_SOURCES})
-    SET(SOURCES ${ARG_SOURCES})
     LIST(FILTER HEADERS INCLUDE REGEX ".+\.(h|hpp|hxx|inl|ipp|tpp|txx|ixx)$")
+
+    SET(SOURCES ${ARG_SOURCES})
     LIST(FILTER SOURCES INCLUDE REGEX ".+\.(c|cc|cpp|cxx|m|mm)$")
+
+    SET(QT_FILES ${ARG_SOURCES})
+    LIST(FILTER QT_FILES INCLUDE REGEX ".+\.(ui|qrc)$")
 
     FOREACH (HEADER ${HEADERS})
         GET_FILENAME_COMPONENT(HEADER_PATH ${HEADER} PATH)
@@ -139,6 +143,16 @@ FUNCTION(GROUP_SOURCES)
             SET(SOURCE_PATH_REL "Source Files\\${SOURCE_PATH_REL_MSVC}")
         ENDIF ()
         SOURCE_GROUP("${SOURCE_PATH_REL}" FILES "${SOURCE}")
+    ENDFOREACH ()
+
+    FOREACH (QT_FILE ${QT_FIELS})
+        GET_FILENAME_COMPONENT(QT_FILE_PATH "${QT_FILE}" PATH)
+        FILE(RELATIVE_PATH QT_FILE_PATH_REL ${ARG_PATH} "${QT_FILE_PATH}")
+        IF (MSVC)
+            STRING(REPLACE "/" "\\" QT_FILE_PATH_REL_MSVC "${QT_FILE_PATH_REL}")
+            SET(QT_FILE_PATH_REL "QT Files\\${QT_FILE_PATH_REL_MSVC}")
+        ENDIF ()
+        SOURCE_GROUP("${QT_FILE_PATH_REL}" FILES "${QT_FILE}")
     ENDFOREACH ()
 ENDFUNCTION()
 
@@ -161,6 +175,8 @@ FUNCTION(GLOBAL_GROUP_SOURCES)
                 "${PATH}/*.m"
                 "${PATH}/*.mm"
                 "${PATH}/*.in"
+                "${PATH}/*.ui"
+                "${PATH}/*.qrc"
         )
         LIST(APPEND SOURCES ${PATH_SOURCES})
         GROUP_SOURCES(PATH ${PATH} SOURCES ${SOURCES})
@@ -174,8 +190,20 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
     SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
 ENDFUNCTION()
 
+FUNCTION(QT_BEGIN)
+    SET(CMAKE_AUTOMOC ON PARENT_SCOPE)
+    set(CMAKE_AUTOUIC ON PARENT_SCOPE)
+    set(CMAKE_AUTORCC ON PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(QT_END)
+    SET(CMAKE_AUTOMOC OFF PARENT_SCOPE)
+    set(CMAKE_AUTOUIC OFF PARENT_SCOPE)
+    set(CMAKE_AUTORCC OFF PARENT_SCOPE)
+ENDFUNCTION()
+
 FUNCTION(ADD_TARGET_GDR)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
 
     FILE(RELATIVE_PATH TARGET_RELATIVE_PATH "${CMAKE_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     SET(FOLDER_PATH "${PROJECT_NAME}/${TARGET_RELATIVE_PATH}")
@@ -228,6 +256,10 @@ FUNCTION(ADD_TARGET_GDR)
     ENDIF ()
 
     # Add target
+    IF (${ARG_QT})
+        QT_BEGIN()
+    ENDIF ()
+
     IF (${ARG_MODE} STREQUAL "EXE")
         ADD_EXECUTABLE(${TARGET_NAME} ${ARG_SOURCES})
         IF (MSVC)
@@ -260,21 +292,13 @@ FUNCTION(ADD_TARGET_GDR)
             ARCHIVE DESTINATION "lib"
             LIBRARY DESTINATION "lib"
     )
+
+    IF (${ARG_QT})
+        QT_END()
+    ENDIF ()
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE" "SOURCES;LIBS" ${ARGN})
-    ADD_TARGET_GDR(MODE ${ARG_MODE} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
-ENDFUNCTION()
-
-FUNCTION(QT_BEGIN)
-    SET(CMAKE_AUTOMOC ON PARENT_SCOPE)
-    set(CMAKE_AUTOUIC ON PARENT_SCOPE)
-    set(CMAKE_AUTORCC ON PARENT_SCOPE)
-ENDFUNCTION()
-
-FUNCTION(QT_END)
-    SET(CMAKE_AUTOMOC OFF PARENT_SCOPE)
-    set(CMAKE_AUTOUIC OFF PARENT_SCOPE)
-    set(CMAKE_AUTORCC OFF PARENT_SCOPE)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT" "SOURCES;LIBS" ${ARGN})
+    ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()
