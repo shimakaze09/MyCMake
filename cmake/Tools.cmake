@@ -169,6 +169,12 @@ FUNCTION(ADD_TARGET_GDR)
     LIST_CHANGE_SEPARATOR(RST FOLDER_PREFIX SEPARATOR "_" LIST ${FOLDERS})
     LIST_CHANGE_SEPARATOR(RST FOLDER_PATH SEPARATOR "/" LIST ${FOLDERS})
 
+    IF ("${FOLDER_PATH}" STREQUAL "")
+        SET(FOLDER_PATH "${PROJECT_NAME}")
+    ELSE ()
+        SET(FOLDER_PATH "${PROJECT_NAME}/${FOLDER_PATH}")
+    ENDIF ()
+
     IF ("${ARG_NAME}" STREQUAL "")
         GET_DIR_NAME(DIR_NAME)
         SET(ARG_NAME ${DIR_NAME})
@@ -184,6 +190,11 @@ FUNCTION(ADD_TARGET_GDR)
     LIST(LENGTH ARG_SOURCES SOURCE_NUM)
     IF (${SOURCE_NUM} EQUAL 0)
         GLOBAL_GROUP_SOURCES(RST ARG_SOURCES PATHS ${CMAKE_CURRENT_SOURCE_DIR})
+        LIST(LENGTH ARG_SOURCES SOURCE_NUM)
+        IF (SOURCE_NUM EQUAL 0)
+            MESSAGE(WARNING "Target [${TARGET_NAME}] has no source files.")
+            RETURN()
+        ENDIF ()
     ENDIF ()
 
     MESSAGE(STATUS "--------------------------------------------------")
@@ -195,23 +206,31 @@ FUNCTION(ADD_TARGET_GDR)
             TITLE "- SOURCES:"
             PREFIX "  - "
     )
-    MESSAGE(STATUS "- LIBRARIES:")
-    LIST_PRINT(STRS ${ARG_LIBS_GENERAL}
-            TITLE "  - GENERAL:"
-            PREFIX "    - "
-    )
-    LIST_PRINT(STRS ${ARG_LIBS_DEBUG}
-            TITLE "  - DEBUG:"
-            PREFIX "    - "
-    )
-    LIST_PRINT(STRS ${ARG_LIBS_RELEASE}
-            TITLE "  - RELEASE:"
-            PREFIX "    - "
-    )
 
-    IF (SOURCE_NUM EQUAL 0)
-        MESSAGE(WARNING "Target [${TARGET_NAME}] has no source files.")
-        RETURN()
+    LIST(LENGTH ARG_LIBS_GENERAL LIBS_GENERAL_NUM)
+    LIST(LENGTH ARG_LIBS_DEBUG LIBS_DEBUG_NUM)
+    LIST(LENGTH ARG_LIBS_RELEASE LIBS_RELEASE_NUM)
+    IF (${LIBS_DEBUG_NUM} EQUAL 0 AND ${LIBS_RELEASE_NUM} EQUAL 0)
+        IF (NOT ${LIBS_GENERAL_NUM} EQUAL 0)
+            LIST_PRINT(STRS ${ARG_LIBS_GENERAL}
+                    TITLE "- LIB:"
+                    PREFIX "    "
+            )
+        ENDIF ()
+    ELSE ()
+        MESSAGE(STATUS "- LIBS:")
+        LIST_PRINT(STRS ${ARG_LIBS_GENERAL}
+                TITLE "  - GENERAL:"
+                PREFIX "    "
+        )
+        LIST_PRINT(STRS ${ARG_LIBS_DEBUG}
+                TITLE "  - DEBUG:"
+                PREFIX "    "
+        )
+        LIST_PRINT(STRS ${ARG_LIBS_RELEASE}
+                TITLE "  - RELEASE:"
+                PREFIX "    "
+        )
     ENDIF ()
 
     # Add target
@@ -231,7 +250,7 @@ FUNCTION(ADD_TARGET_GDR)
     ENDIF ()
 
     # Set folder
-    SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES FOLDER "${PROJECT_NAME}/${FOLDER_PATH}")
+    SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES FOLDER "${FOLDER_PATH}")
 
     FOREACH (LIB ${ARG_LIBS_GENERAL})
         TARGET_LINK_LIBRARIES(${TARGET_NAME} general ${LIB})
@@ -247,8 +266,6 @@ FUNCTION(ADD_TARGET_GDR)
             ARCHIVE DESTINATION "lib"
             LIBRARY DESTINATION "lib"
     )
-
-    MESSAGE(STATUS "--------------------------------------------------")
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
