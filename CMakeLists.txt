@@ -46,13 +46,13 @@ QT_INIT(COMPONENTS ${QT_COMPONENTS})
 ENDIF()
 
 INCLUDE_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include"
         # $ENV{*_INCLUDE_PATH}
         # ...
 )
 
 LINK_DIRECTORIES(
-        "${CMAKE_SOURCE_DIR}/lib"
+        "${PROJECT_SOURCE_DIR}/lib"
         # $ENV{*_LIBRARY_PATH}
         # ...
 )
