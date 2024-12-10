@@ -5,7 +5,7 @@
 #ifndef SERVANT_HXX
 #define SERVANT_HXX
 
-#include "config_servant_dll.h"
+#include "config_dll_servant.h"
 
 class DLL_SPEC Servant {
  public:
