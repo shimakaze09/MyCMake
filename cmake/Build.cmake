@@ -46,7 +46,7 @@
 # ----------------------------------------------------------------------------
 #
 #
-# EXPORT()
+# EXPORT_TARGETS()
 # - Export all targets.
 #
 # ----------------------------------------------------------------------------
@@ -298,6 +298,7 @@ FUNCTION(EXPORT_TARGETS)
     # Generate the export targets for the build tree.
     # Needs to be after the install(TARGETS) command.
     EXPORT(EXPORT "${PROJECT_NAME}Targets"
+            NAMESPACE "${PROJECT_NAME}::"
             FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
     )
 
@@ -305,4 +306,6 @@ FUNCTION(EXPORT_TARGETS)
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
             DESTINATION "lib/${PROJECT_NAME}/cmake"
     )
+
+    INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
 ENDFUNCTION()
