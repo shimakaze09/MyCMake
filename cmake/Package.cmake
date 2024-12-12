@@ -23,7 +23,7 @@ MACRO(ADD_DEP)
                 GIT_REPOSITORY "https://github.com/shimakaze09/${NAME}.git"
                 GIT_TAG "v${VERSION}"
         )
-        FETCHCONTENT_MAKE_AVAILABLE(${NAME})
+        FETCHCONTENT_MAKEAVAILABLE(${NAME})
         MESSAGE(STATUS "${NAME} fetched: ${NAME}-${VERSION}")
     ENDIF ()
 ENDMACRO()
