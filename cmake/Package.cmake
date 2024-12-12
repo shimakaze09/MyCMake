@@ -15,16 +15,16 @@ MESSAGE(STATUS "Include Package.cmake")
 MACRO(ADD_DEP)
     FIND_PACKAGE(${NAME} ${VERSION} EXACT QUIET)
     IF (${FOUND})
-        MESSAGE(STATUS "${NAME} found: ${DEP}-${VERSION}")
+        MESSAGE(STATUS "${NAME} found: ${NAME}-${VERSION}")
     ELSE ()
         MESSAGE(STATUS "${NAME} not found, fetching...")
         FETCHCONTENT_DECLARE(
                 ${NAME}
-                GIT_REPOSITORY "https://github.com/shimakaze09/${DEP}.git"
+                GIT_REPOSITORY "https://github.com/shimakaze09/${NAME}.git"
                 GIT_TAG "v${VERSION}"
         )
         FETCHCONTENT_MAKE_AVAILABLE(${NAME})
-        MESSAGE(STATUS "${NAME} fetched: ${DEP}-${VERSION}")
+        MESSAGE(STATUS "${NAME} fetched: ${NAME}-${VERSION}")
     ENDIF ()
 ENDMACRO()
 
@@ -65,7 +65,7 @@ MACRO(EXPORT_TARGETS)
 
     # Generate the export targets for the build tree
     # needs to be after the INSTALL(TARGETS ) command
-    EXPORT(EXPORT "${PROJECT_NAME}/Targets"
+    EXPORT(EXPORT "${PROJECT_NAME}Targets"
             NAMESPACE "${PROJECT_NAME}::"
             FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
     )
