@@ -46,14 +46,26 @@
 # ----------------------------------------------------------------------------
 #
 #
-# EXPORT_TARGETS()
-# - Export all targets.
+# EXPORT_TARGETS([INC <INC>])
+# - Export some files
+# - INC: default is ON, install include/
+#
+# ----------------------------------------------------------------------------
+#
+# INIT_INSTALL_PREFIX()
 #
 # ----------------------------------------------------------------------------
 
 MESSAGE(STATUS "Include Build.cmake")
 
 INCLUDE(QT)
+
+MACRO(INIT_INSTALL_PREFIX)
+    IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        PATH_BACK(ROOT ${CMAKE_INSTALL_PREFIX} 1)
+        SET(CMAKE_INSTALL_PREFIX "${ROOT}/My" CACHE PATH "INSTALL PREFIX" FORCE)
+    ENDIF ()
+ENDMACRO()
 
 FUNCTION(ADD_SUB_DIRS_REC PATH)
     MESSAGE(STATUS "--------------------------------------------------")
@@ -244,7 +256,6 @@ FUNCTION(ADD_TARGET_GDR)
         FOREACH (LIB ${ARG_LIBS_RELEASE})
             TARGET_LINK_LIBRARIES(${TARGET_NAME} optimized ${LIB})
         ENDFOREACH ()
-        MESSAGE(STATUS "ARG_TEST: ${ARG_TEST}")
         IF (NOT "${ARG_TEST}" STREQUAL "ON")
             INSTALL(TARGETS ${TARGET_NAME}
                     EXPORT "${PROJECT_NAME}Targets"
@@ -265,7 +276,8 @@ FUNCTION(ADD_TARGET)
     ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} TEST ${ARG_TEST} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()
 
-FUNCTION(EXPORT_TARGETS)
+MACRO(EXPORT_TARGETS)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC" "" ${ARGN})
     # Install the configuration file.
     INSTALL(EXPORT "${PROJECT_NAME}Targets"
             FILE "${PROJECT_NAME}Targets.cmake"
@@ -307,5 +319,7 @@ FUNCTION(EXPORT_TARGETS)
             DESTINATION "lib/${PROJECT_NAME}/cmake"
     )
 
-    INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
-ENDFUNCTION()
+    IF (NOT "${ARG_INC}" STREQUAL "OFF")
+        INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
+    ENDIF ()
+ENDMACRO()
