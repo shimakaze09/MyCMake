@@ -63,7 +63,7 @@ MACRO(EXPORT_TARGETS)
                           MESSAGE(STATUS \"Finding package: MyCMake v0.3.0\")
                           FIND_PACKAGE(MyCMake 0.3.0 QUIET)
                           IF (\${MyCMake_FOUND})
-                                MESSAGE(STATUS \"MyCMake found: MyCMake ${MyCMake_VERSION}\")
+                                MESSAGE(STATUS \"MyCMake found: MyCMake v\${MyCMake_VERSION}\")
                           ELSE ()
                                 SET(ADDRESS \"https://github.com/shimakaze09/MyCMake\")
                                 MESSAGE(STATUS \"MyCMake v0.3.0 not found, fetching from \${ADDRESS}\n\"
