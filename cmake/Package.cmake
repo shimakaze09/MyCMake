@@ -29,22 +29,32 @@ MACRO(ADD_DEP)
 ENDMACRO()
 
 MACRO(EXPORT_TARGETS)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC" "" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC;TARGET" "" ${ARGN})
 
     SET(PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
     MESSAGE(STATUS "Exporting ${PACKAGE_NAME}")
-    # Install the configuration targets
-    INSTALL(EXPORT "${PROJECT_NAME}Targets"
-            FILE "${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${PACKAGE_NAME}/cmake"
-    )
+
+    IF (NOT "${ARG_TARGET}" STREQUAL "OFF")
+        # Generate the export targets for the build tree
+        # needs to be after the INSTALL(TARGETS ) command
+        EXPORT(EXPORT "${PROJECT_NAME}Targets"
+                NAMESPACE "My::"
+                FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+        )
+
+        # Install the configuration targets
+        INSTALL(EXPORT "${PROJECT_NAME}Targets"
+                NAMESPACE "My::"
+                DESTINATION "${PACKAGE_NAME}/cmake"
+        )
+    ENDIF ()
 
     INCLUDE(CMakePackageConfigHelpers)
 
     # Generate the config file that is includes the exports
     CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
             "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-            INSTALL_DESTINATION "lib/${PACKAGE_NAME}/cmake"
+            INSTALL_DESTINATION "${PACKAGE_NAME}/cmake"
             NO_SET_AND_CHECK_MACRO
             NO_CHECK_REQUIRED_COMPONENTS_MACRO
     )
@@ -60,22 +70,10 @@ MACRO(EXPORT_TARGETS)
     INSTALL(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-            DESTINATION "lib/${PACKAGE_NAME}/cmake"
-    )
-
-    # Generate the export targets for the build tree
-    # needs to be after the INSTALL(TARGETS ) command
-    EXPORT(EXPORT "${PROJECT_NAME}Targets"
-            NAMESPACE "${PROJECT_NAME}::"
-            FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-    )
-
-    INSTALL(FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${package_name}/cmake"
+            DESTINATION "${package_name}/cmake"
     )
 
     IF (NOT "${ARG_INC}" STREQUAL "OFF")
-        INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
+        INSTALL(DIRECTORY "include" DESTINATION ${PACKAGE_NAME})
     ENDIF ()
 ENDMACRO()
