@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20 FATAL_ERROR)
 
 # Project settings
-PROJECT(MyCMake VERSION 0.1 LANGUAGES CXX)
+PROJECT(MyCMake VERSION 0.2 LANGUAGES CXX)
 MESSAGE(STATUS "[Project] ${PROJECT_NAME}")
 
 # Add 'd' to the end of the lib and dll names in debug mode
@@ -45,10 +45,6 @@ ENDIF ()
 
 INCLUDE_DIRECTORIES(
         "${PROJECT_SOURCE_DIR}/include"
-)
-
-LINK_DIRECTORIES(
-        "${PROJECT_SOURCE_DIR}/lib"
 )
 
 ADD_SUB_DIRS_REC(src)
