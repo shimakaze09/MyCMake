@@ -289,7 +289,7 @@ FUNCTION(ADD_TARGET_GDR)
 
     FOREACH (TARGET ${TARGETS})
         IF (NOT "${ARG_TEST}" STREQUAL "ON")
-            INSTALL(TARGETS ${TARGET_NAME}
+            INSTALL(TARGETS ${TARGET}
                     EXPORT "${PROJECT_NAME}Targets"
                     RUNTIME DESTINATION "bin"
                     ARCHIVE DESTINATION "${PACKAGE_NAME}/lib"
