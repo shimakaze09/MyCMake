@@ -56,7 +56,11 @@ MACRO(EXPORT_TARGETS)
     MESSAGE(STATUS "Exporting ${PACKAGE_NAME}")
 
     IF (${_PACKAGE_HAS_DEPENDENCIES})
-        SET(MY_PACKAGE_INIT "MESSAGE(STATUS \"Finding package: MyCMake v0.3.0\")
+        SET(MY_PACKAGE_INIT "
+                          IF(NOT ${FETCHCONTENT_FOUND})
+                                INCLUDE(FetchContent)
+                          ENDIF ()
+                          MESSAGE(STATUS \"Finding package: MyCMake v0.3.0\")
                           FIND_PACKAGE(MyCMake 0.3.0 QUIET)
                           IF (\${MyCMake_FOUND})
                                 MESSAGE(STATUS \"MyCMake found: MyCMake ${MyCMake_VERSION}\")
@@ -72,7 +76,7 @@ MACRO(EXPORT_TARGETS)
                                 MESSAGE(STATUS \"Building MyCMake v0.3.0...\")
                                 FETCHCONTENT_MAKEAVAILABLE(MyCMake)
                                 MESSAGE(STATUS \"MyCMake built: MyCMake v0.3.0\")
-                            ENDIF ()")
+                          ENDIF ()")
         MESSAGE(STATUS "[Dependencies]")
         LIST(LENGTH _PACKAGE_DEP_NAME_LIST _PACKAGE_DEP_NUM)
         MATH(EXPR _PACKAGE_STOP "${_PACKAGE_DEP_NUM} - 1")
@@ -86,7 +90,7 @@ MACRO(EXPORT_TARGETS)
 
     IF (NOT "${ARG_TARGET}" STREQUAL "OFF")
         # Generate the export targets for the build tree
-        # needs to be after the INSTALL(TARGETS ) command
+        # needs to be after the INSTALL(TARGETS) command
         EXPORT(EXPORT "${PROJECT_NAME}Targets"
                 NAMESPACE "My::"
                 # FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
