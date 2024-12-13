@@ -98,6 +98,7 @@ MACRO(EXPORT_TARGETS)
 
         # Install the configuration targets
         INSTALL(EXPORT "${PROJECT_NAME}Targets"
+                FILE "${PROJECT_NAME}Targets.cmake"
                 NAMESPACE "My::"
                 DESTINATION "${PACKAGE_NAME}/cmake"
         )
@@ -107,7 +108,7 @@ MACRO(EXPORT_TARGETS)
 
     # Generate the config file that is includes the exports
     CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
-            "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
             INSTALL_DESTINATION "${PACKAGE_NAME}/cmake"
             NO_SET_AND_CHECK_MACRO
             NO_CHECK_REQUIRED_COMPONENTS_MACRO
