@@ -194,23 +194,16 @@ FUNCTION(ADD_TARGET_GDR)
         MESSAGE(STATUS "- LIBS:")
         LIST_PRINT(STRS ${ARG_LIBS_GENERAL}
                 TITLE "  - GENERAL:"
-                PREFIX "    "
-        )
+                PREFIX "      ")
         LIST_PRINT(STRS ${ARG_LIBS_DEBUG}
                 TITLE "  - DEBUG:"
-                PREFIX "    "
-        )
+                PREFIX "      ")
         LIST_PRINT(STRS ${ARG_LIBS_RELEASE}
                 TITLE "  - RELEASE:"
-                PREFIX "    "
-        )
+                PREFIX "      ")
     ENDIF ()
 
     # Add target
-    IF (${ARG_QT})
-        QT_BEGIN()
-    ENDIF ()
-
     IF (${ARG_QT})
         QT_BEGIN()
     ENDIF ()
@@ -253,7 +246,7 @@ FUNCTION(ADD_TARGET_GDR)
         ADD_LIBRARY("My::${TARGET_NAME}_shared" ALIAS "${TARGET_NAME}_shared")
         ADD_LIBRARY("${TARGET_NAME}_static" STATIC ${ARG_SOURCES})
         ADD_LIBRARY("My::${TARGET_NAME}_static" ALIAS "${TARGET_NAME}_static")
-        TARGET_COMPILE_DEFINITIONS("${TARGET_NAME}_static" PUBLIC -DUBPA_STATIC)
+        TARGET_COMPILE_DEFINITIONS("${TARGET_NAME}_static" PUBLIC -DMY_STATIC)
         SET(TARGETS "${TARGET_NAME}_shared;${TARGET_NAME}_static")
     ELSE ()
         MESSAGE(FATAL_ERROR "Unknown mode: ${ARG_MODE}")
@@ -270,10 +263,10 @@ FUNCTION(ADD_TARGET_GDR)
             FOREACH (LIB ${ARG_LIBS_GENERAL})
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE general ${LIB})
             ENDFOREACH ()
-            FOREACH (lib ${ARG_LIBS_DEBUG})
+            FOREACH (LIB ${ARG_LIBS_DEBUG})
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE debug ${LIB})
             ENDFOREACH ()
-            FOREACH (lib ${ARG_LIBS_RELEASE})
+            FOREACH (LIB ${ARG_LIBS_RELEASE})
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE optimized ${LIB})
             ENDFOREACH ()
         ELSE ()
@@ -281,10 +274,10 @@ FUNCTION(ADD_TARGET_GDR)
                 TARGET_LINK_LIBRARIES(${TARGET} general ${LIB})
             ENDFOREACH ()
             FOREACH (LIB ${ARG_LIBS_DEBUG})
-                TARGET_LINK_LIBRARIES(${TARGET} debug ${LIB})
+                TARGET_LINK_LIBRARIES(${target} debug ${LIB})
             ENDFOREACH ()
             FOREACH (LIB ${ARG_LIBS_RELEASE})
-                TARGET_LINK_LIBRARIES(${TARGET} optimized ${LIB})
+                TARGET_LINK_LIBRARIES(${target} optimized ${LIB})
             ENDFOREACH ()
         ENDIF ()
     ENDFOREACH ()
