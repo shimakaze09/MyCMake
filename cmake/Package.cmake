@@ -57,25 +57,25 @@ MACRO(EXPORT_TARGETS)
 
     IF (${_PACKAGE_HAS_DEPENDENCIES})
         SET(MY_PACKAGE_INIT "
-IF (NOT ${FetchContent_FOUND})
-	INCLUDE(FetchContent)
+IF (NOT ${FETCHCONTENT_FOUND})
+	INCLUDE(FETCHCONTENT)
 ENDIF ()
-MESSAGE (STATUS \"find package: MyCMake v0.3.4\")
-FIND_PACKAGE(MyCMake 0.3.4 QUIET)
+MESSAGE (STATUS \"find package: MyCMake v0.3.5\")
+FIND_PACKAGE(MyCMake 0.3.5 QUIET)
 IF(\${MyCMake_FOUND})
 	MESSAGE(STATUS \"MyCMake v\${MyCMake_VERSION} found\")
 ELSE()
 	SET(PACKAGE_ADDRESS \"https://github.com/shimakaze09/MyCMake.git\")
-	MESSAGE(STATUS \"UCMake v0.3.0 not found, so fetch it ...\")
+	MESSAGE(STATUS \"UCMake v0.3.5 not found, so fetch it ...\")
 	MESSAGE(STATUS \"fetch: \${PACKAGE_ADDRESS} with tag v0.3.4\")
 	FETCHCONTENT_DECLARE(
 	  MyCMake
 	  GIT_REPOSITORY \${PACKAGE_ADDRESS}
-	  GIT_TAG \"v0.3.4\"
+	  GIT_TAG \"v0.3.5\"
 	)
-	MESSAGE(STATUS \"MyCMake v0.3.4 fetch done, building ...\")
+	MESSAGE(STATUS \"MyCMake v0.3.5 fetch done, building ...\")
 	FETCHCONTENT_MAKEAVAILABLE(MyCMake)
-	MESSAGE(STATUS \"MyCMake v0.3.4 build done\")
+	MESSAGE(STATUS \"MyCMake v0.3.5 build done\")
 ENDIF()
 ")
         MESSAGE(STATUS "[Dependencies]")
