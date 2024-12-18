@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20 FATAL_ERROR)
 
 # Project settings
-PROJECT(MyCMake VERSION 0.3.8)
+PROJECT(MyCMake VERSION 0.4.0)
 MESSAGE(STATUS "[Project] ${PROJECT_NAME} ${PROJECT_VERSION}")
 
 # Add 'd' to the end of the lib and dll names in debug mode
