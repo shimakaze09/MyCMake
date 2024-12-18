@@ -68,14 +68,13 @@ MACRO(ADD_DEP_PROJECT PROJ_NAME NAME VERSION)
             MESSAGE(STATUS "${NAME} v${${NAME}_VERSION} found")
         ELSE ()
             SET(ADDRESS "https://github.com/shimakaze09/${NAME}")
-            MESSAGE(STATUS "${NAME} v${VERSION} not found, fetching..."
-                    "Fetching from: ${ADDRESS} with tag v${VERSION}")
+            MESSAGE(STATUS "${NAME} v${VERSION} not found")
+            MESSAGE(STATUS "Fetching from: ${ADDRESS} with tag v${VERSION}")
             FETCHCONTENT_DECLARE(
                     ${NAME}
                     GIT_REPOSITORY ${ADDRESS}
                     GIT_TAG "v${VERSION}"
             )
-            MESSAGE(STATUS "${NAME} v${VERSION} fetched, building...")
             FETCHCONTENT_MAKEAVAILABLE(${NAME})
             MESSAGE(STATUS "${NAME} v${VERSION} built")
         ENDIF ()
@@ -105,7 +104,7 @@ MACRO(EXPORT_TARGETS)
                         MESSAGE(STATUS \"MyCMake v\${MyCMake_VERSION} found.\")
                     ELSE()
                         SET(${PROJECT_NAME}_ADDRESS \"https://github.com/shimakaze09/MyCMake\")
-                        MESSAGE(STATUS \"MyCMake v${MyCMake_VERSION} not found, fetching...\")
+                        MESSAGE(STATUS \"MyCMake v${MyCMake_VERSION} not found\")
                         FETCHCONTENT_DECLARE(
                             MyCMake
                             GIT_REPOSITORY \${${PROJECT_NAME}_ADDRESS}
