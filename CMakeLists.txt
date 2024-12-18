@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20 FATAL_ERROR)
 
 # Project settings
-PROJECT(MyCMake VERSION 0.4.0)
+PROJECT(MyCMake VERSION 0.4.1)
 MESSAGE(STATUS "[Project] ${PROJECT_NAME} ${PROJECT_VERSION}")
 
 # Add 'd' to the end of the lib and dll names in debug mode
@@ -36,6 +36,8 @@ INCLUDE(Tools)
 
 # Set the default install path prefix
 INIT_INSTALL_PREFIX()
+
+INIT_TEST_SWITCH()
 
 SET(TEST_QT OFF CACHE BOOL OFF)
 IF (TEST_QT)
