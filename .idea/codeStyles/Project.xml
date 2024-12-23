@@ -104,7 +104,7 @@
     </clangFormatSettings>
     <files>
       <extensions>
-        <pair source="cxx" header="hxx" fileNamingConvention="PASCAL_CASE" />
+        <pair source="cpp" header="h" fileNamingConvention="PASCAL_CASE" />
         <pair source="c" header="h" fileNamingConvention="NONE" />
         <pair source="cu" header="cuh" fileNamingConvention="NONE" />
         <pair source="ixx" header="" fileNamingConvention="NONE" />
