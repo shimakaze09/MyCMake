@@ -3,7 +3,7 @@ SET(TARGET_NAME "${DIR_NAME}")
 
 GLOBAL_GROUP_SOURCES(RST SOURCES PATHS
         ${CMAKE_CURRENT_SOURCE_DIR}
-        "${PROJECT_SOURCE_DIR}/include/Test_01_GroupSrcs"
+        "${PROJECT_SOURCE_DIR}/include/test_01_GroupSrcs"
 )
 
 SET(LIBS "")
