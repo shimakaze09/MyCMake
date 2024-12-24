@@ -1,30 +1,89 @@
 # [ INTERFACE ]
 #
+# --------------------------------------------------
+#
+# LIST_PRINT(STRS <STRING-LIST> [TITLE <TITLE>] [PREFIX <PREFIX>])
+# - Print:
+#         <TITLE>
+#         <PREFIX> item0
+#         ...
+#         <PREFIX> itemN
+#
+# --------------------------------------------------
+#
+# LIST_CHANGE_SEPARATOR(RST <RESULT-NAME> SEPARATOR <SEPARATOR> LIST <LIST>)
+# - Separator '/': "a;b;c" -> "a/b/c"
+#
+# --------------------------------------------------
+#
 # GET_DIR_NAME(<RESULT-NAME>)
 # - Get the name of the current directory
 #
-# ADD_SUB_DIRS()
+# --------------------------------------------------
+#
+# ADD_SUB_DIRS(<NEED-APPEND-FOLDER>)
+# - <NEED-APPEND-FOLDER>: ON, OFF, append the folder name to the target name
 # - Add all subdirectories
 #
-# ADD_CURRENT_PATH_SOURCES(<RESULT-NAME>)
-# - Add all source files in the current directory: *.h, *.hpp, *.inl, *.cxx, *.cpp
+# --------------------------------------------------
 #
-# LIST_CHANGE_SEPARATOR(<RESULT-NAME> SEPARATOR <SEPARATOR> LIST <LIST>)
-# - Separator '/': "a;b;c" -> "a/b/c"
+# GROUP_SOURCES(PATH <PATH> SOURCES <SOURCE-LIST>)
+# - Create filters (recursive to <PATH>) for the source files
+#
+# --------------------------------------------------
+#
+# GLOBAL_GROUP_SOURCES(<RST> <PATH>)
+# - Recursively glob all source files in the <PATH> and call GROUP_SOURCES
+# - Regex: .+\.(h|hpp|inl|c|cc|cpp|cxx)
+#
+# --------------------------------------------------
 #
 # ADD_TARGET_GDR(MODE <MODE> NAME <NAME> SOURCES <SOURCES> 
 #   LIBS_GENERAL <LIBS_GENERAL> LIBS_DEBUG <LIBS_DEBUG> LIBS_RELEASE <LIBS_RELEASE>)
 # - MODE: EXE, LIB, DLL
 # - Auto set the target properties: FOLDER, DEBUG_POSTFIX
 #
+# --------------------------------------------------
+#
 # ADD_TARGET(MODE <MODE> NAME <NAME> SOURCES <SOURCES> LIBS <LIBS>)
 # - Call ADD_TARGET_GDR with LIBS_DEBUG and LIBS_RELEASE empty
+#
+# --------------------------------------------------
 #
 # QT_BEGIN()
 # - Call before the Qt target
 #
+# --------------------------------------------------
+#
 # QT_END()
 # - Call after the Qt target
+#
+# --------------------------------------------------
+
+FUNCTION(LIST_PRINT)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "TITLE;PREFIX" "STRS" ${ARGN})
+    IF (NOT ${ARG_TITLE} STREQUAL "")
+        MESSAGE(STATUS ${ARG_TITLE})
+    ENDIF ()
+    FOREACH (STR ${ARG_STRS})
+        MESSAGE(STATUS "${ARG_PREFIX}${STR}")
+    ENDFOREACH ()
+ENDFUNCTION()
+
+FUNCTION(LIST_CHANGE_SEPARATOR)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "RST;SEPARATOR" "LIST" ${ARGN})
+    LIST(LENGTH ARG_LIST LIST_LENGTH)
+    IF ($<BOOL:${LIST_LENGTH}>)
+        SET(${ARG_RST} "" PARENT_SCOPE)
+    ELSE ()
+        SET(RST "")
+        LIST(POP_BACK ARG_LIST BACK)
+        FOREACH (ITEM ${ARG_LIST})
+            SET(RST "${RST}${ITEM}${ARG_SEPARATOR}")
+        ENDFOREACH ()
+        SET(${ARG_RST} "${RST}${BACK}" PARENT_SCOPE)
+    ENDIF ()
+ENDFUNCTION()
 
 FUNCTION(GET_DIR_NAME DIR_NAME)
     STRING(REGEX MATCH "([^/]*)$" TMP ${CMAKE_CURRENT_SOURCE_DIR})
@@ -50,37 +109,48 @@ FUNCTION(ADD_SUB_DIRS NEED_APPEND_FOLDER)
     ENDFOREACH ()
 ENDFUNCTION()
 
-FUNCTION(ADD_CURRENT_PATH_SOURCES RST)
-    FILE(GLOB SOURCES
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.inl"
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.cxx"
-            "${CMAKE_CURRENT_SOURCE_DIR}/*.cc"
-    )
-    SET(${RST} ${SOURCES} PARENT_SCOPE)
+FUNCTION(GROUP_SOURCES)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "PATH" "SOURCES" ${ARGN})
+
+    SET(HEADERS ${ARG_SOURCES})
+    SET(SOURCES ${ARG_SOURCES})
+    LIST(FILTER HEADERS INCLUDE REGEX ".+\.(h|hpp|inl)$")
+    LIST(FILTER SOURCES INCLUDE REGEX ".+\.(c|cc|cpp|cxx)$")
+
+    FOREACH (HEADER ${HEADERS})
+        GET_FILENAME_COMPONENT(HEADER_PATH "${HEADER}" PATH)
+        FILE(RELATIVE_PATH HEADER_PATH_REL ${ARG_PATH} "${HEADER_PATH}")
+        IF (MSVC)
+            STRING(REPLACE "/" "\\" HEADER_PATH_REL_MSVC "${HEADER_PATH_REL}")
+            SET(HEADER_PATH_REL "HEADERS\\${HEADER_PATH_REL_MSVC}")
+        ENDIF ()
+        SOURCE_GROUP("${HEADER_PATH_REL}" FILES "${HEADER}")
+    ENDFOREACH ()
+
+    FOREACH (SOURCE ${SOURCES})
+        GET_FILENAME_COMPONENT(SOURCE_PATH "${SOURCE}" PATH)
+        FILE(RELATIVE_PATH SOURCE_PATH_REL ${ARG_PATH} "${SOURCE_PATH}")
+        IF (MSVC)
+            STRING(REPLACE "/" "\\" SOURCE_PATH_REL_MSVC "${SOURCE_PATH_REL}")
+            SET(SOURCE_PATH_REL "SOURCES\\${SOURCE_PATH_REL_MSVC}")
+        ENDIF ()
+        SOURCE_GROUP("${SOURCE_PATH_REL}" FILES "${SOURCE}")
+    ENDFOREACH ()
 ENDFUNCTION()
 
-FUNCTION(LIST_CHANGE_SEPARATOR)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "RST;SEPARATOR" "LIST" ${ARGN})
-    MESSAGE(STATUS "- RESULT: ${ARG_RST}")
-    MESSAGE(STATUS "- SEPARATOR: ${ARG_SEPARATOR}")
-    MESSAGE(STATUS "- LIST:")
-    FOREACH (ITEM ${ARG_LIST})
-        MESSAGE(STATUS "    ${ITEM}")
-    ENDFOREACH ()
-    SET(RST "")
-    LIST(LENGTH ARG_LIST LIST_LENGTH)
-    IF ($<BOOL:${LIST_LENGTH}>)
-        SET(${ARG_RST} "" PARENT_SCOPE)
-    ELSE ()
-        LIST(POP_BACK ARG_LIST BACK)
-        FOREACH (ITEM ${ARG_LIST})
-            SET(RST "${RST}${ITEM}${ARG_SEPARATOR}")
-        ENDFOREACH ()
-        SET(${ARG_RST} "${RST}${BACK}" PARENT_SCOPE)
-    ENDIF ()
+FUNCTION(GLOBAL_GROUP_SOURCES RST PATH)
+    MESSAGE(STATUS ${PATH})
+    FILE(GLOB_RECURSE SOURCES
+            "${PATH}/*.h"
+            "${PATH}/*.hpp"
+            "${PATH}/*.inl"
+            "${PATH}/*.c"
+            "${PATH}/*.cc"
+            "${PATH}/*.cpp"
+            "${PATH}/*.cxx"
+    )
+    SET(${RST} ${SOURCES} PARENT_SCOPE)
+    GROUP_SOURCES(PATH ${PATH} SOURCES ${SOURCES})
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET_GDR)
@@ -100,23 +170,19 @@ FUNCTION(ADD_TARGET_GDR)
     MESSAGE(STATUS "- NAME: ${TARGET_NAME}")
     MESSAGE(STATUS "- FOLDER: ${FOLDER_PATH}")
     MESSAGE(STATUS "- MODE: ${ARG_MODE}")
-    MESSAGE(STATUS "- SOURCES:")
-    FOREACH (SOURCE ${ARG_SOURCES})
-        MESSAGE(STATUS "    ${SOURCE}")
-    ENDFOREACH ()
+    LIST_PRINT(STRS ${ARG_SOURCES}
+            TITLE "- SOURCES:"
+            PREFIX "    ")
     MESSAGE(STATUS "- LIBS:")
-    MESSAGE(STATUS "  - GENERAL:")
-    FOREACH (LIB ${ARG_LIBS_GENERAL})
-        MESSAGE(STATUS "      ${LIB}")
-    ENDFOREACH ()
-    MESSAGE(STATUS "  - DEBUG:")
-    FOREACH (LIB ${ARG_LIBS_DEBUG})
-        MESSAGE(STATUS "      ${LIB}")
-    ENDFOREACH ()
-    MESSAGE(STATUS "  - RELEASE:")
-    FOREACH (LIB ${ARG_LIBS_RELEASE})
-        MESSAGE(STATUS "      ${LIB}")
-    ENDFOREACH ()
+    LIST_PRINT(STRS ${ARG_LIBS_GENERAL}
+            TITLE "- GENERAL:"
+            PREFIX "    ")
+    LIST_PRINT(STRS ${ARG_LIBS_DEBUG}
+            TITLE "- DEBUG:"
+            PREFIX "    ")
+    LIST_PRINT(STRS ${ARG_LIBS_RELEASE}
+            TITLE "- RELEASE:"
+            PREFIX "    ")
 
     IF (SOURCES_NUM EQUAL 0)
         MESSAGE(WARNING "Target ${TARGET_NAME} has no sources")
