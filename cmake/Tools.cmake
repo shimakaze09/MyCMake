@@ -33,7 +33,7 @@
 #
 # GLOBAL_GROUP_SOURCES(RST <RST> PATHS <PATH-LIST>)
 # - Recursively glob all source files in <PATH-LIST> and call GROUP_SOURCES for each path
-# - Regex: .+\.(h|hpp|inl|c|cc|cpp|cxx)
+# - Regex: .+\.(h|hpp|inl|in|c|cc|cpp|cxx)
 #
 # --------------------------------------------------
 #
@@ -145,6 +145,7 @@ FUNCTION(GLOBAL_GROUP_SOURCES)
                 "${PATH}/*.h"
                 "${PATH}/*.hpp"
                 "${PATH}/*.inl"
+                "${PATH}/*.in"
                 "${PATH}/*.c"
                 "${PATH}/*.cc"
                 "${PATH}/*.cpp"
