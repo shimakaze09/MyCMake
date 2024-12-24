@@ -32,8 +32,8 @@
 #
 # --------------------------------------------------
 #
-# GLOBAL_GROUP_SOURCES(<RST> <PATH>)
-# - Recursively glob all source files in the <PATH> and call GROUP_SOURCES
+# GLOBAL_GROUP_SOURCES(RST <RST> PATHS <PATH-LIST>)
+# - Recursively glob all source files in <PATH-LIST> and call GROUP_SOURCES for each path
 # - Regex: .+\.(h|hpp|inl|c|cc|cpp|cxx)
 #
 # --------------------------------------------------
@@ -138,19 +138,23 @@ FUNCTION(GROUP_SOURCES)
     ENDFOREACH ()
 ENDFUNCTION()
 
-FUNCTION(GLOBAL_GROUP_SOURCES RST PATH)
-    MESSAGE(STATUS ${PATH})
-    FILE(GLOB_RECURSE SOURCES
-            "${PATH}/*.h"
-            "${PATH}/*.hpp"
-            "${PATH}/*.inl"
-            "${PATH}/*.c"
-            "${PATH}/*.cc"
-            "${PATH}/*.cpp"
-            "${PATH}/*.cxx"
-    )
-    SET(${RST} ${SOURCES} PARENT_SCOPE)
-    GROUP_SOURCES(PATH ${PATH} SOURCES ${SOURCES})
+FUNCTION(GLOBAL_GROUP_SOURCES)
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "RST" "PATHS" ${ARGN})
+    SET(SOURCES "")
+    FOREACH (PATH ${ARG_PATHS})
+        FILE(GLOB_RECURSE PATH_SOURCES
+                "${PATH}/*.h"
+                "${PATH}/*.hpp"
+                "${PATH}/*.inl"
+                "${PATH}/*.c"
+                "${PATH}/*.cc"
+                "${PATH}/*.cpp"
+                "${PATH}/*.cxx"
+        )
+        LIST(APPEND SOURCES ${PATH_SOURCES})
+        GROUP_SOURCES(PATH ${PATH} SOURCES ${SOURCES})
+    ENDFOREACH ()
+    SET(${ARG_RST} ${SOURCES} PARENT_SCOPE)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET_GDR)
