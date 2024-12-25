@@ -2,8 +2,8 @@
 #
 # --------------------------------------------------
 #
-# ADD_SUB_DIRS()
-# - Add all subdirectories
+# ADD_SUB_DIRS(<PATH>)
+# - Add all subdirectories recursively in <path>
 #
 # --------------------------------------------------
 #
@@ -41,15 +41,17 @@ MESSAGE(STATUS "Include Tools.cmake")
 
 INCLUDE(Qt)
 
-FUNCTION(ADD_SUB_DIRS)
-    FILE(GLOB CHILDREN RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
-    SET(DIR_LIST "")
-    FOREACH (CHILD ${CHILDREN})
-        IF (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${CHILD})
-            LIST(APPEND DIR_LIST ${CHILD})
+function(ADD_SUB_DIRS PATH)
+    MESSAGE(STATUS "----------")
+    FILE(GLOB_RECURSE CHILDREN LIST_DIRECTORIES true ${CMAKE_CURRENT_SOURCE_DIR}/${PATH}/*)
+    SET(DIRS "")
+    foreach (ITEM ${CHILDREN})
+        IF (IS_DIRECTORY ${ITEM} AND EXISTS "${ITEM}/CMakeLists.txt")
+            LIST(APPEND DIRS ${ITEM})
         ENDIF ()
     ENDFOREACH ()
-    FOREACH (DIR ${DIR_LIST})
+    LIST_PRINT(TITLE "DIRS:" PREFIX "- " STRS ${DIRS})
+    FOREACH (DIR ${DIRS})
         ADD_SUBDIRECTORY(${DIR})
     ENDFOREACH ()
 ENDFUNCTION()
