@@ -2,25 +2,6 @@
 #
 # --------------------------------------------------
 #
-# LIST_PRINT(STRS <STRING-LIST> [TITLE <TITLE>] [PREFIX <PREFIX>])
-# - Print:
-#         <TITLE>
-#         <PREFIX> item0
-#         ...
-#         <PREFIX> itemN
-#
-# --------------------------------------------------
-#
-# LIST_CHANGE_SEPARATOR(RST <RESULT-NAME> SEPARATOR <SEPARATOR> LIST <LIST>)
-# - Separator '/': "a;b;c" -> "a/b/c"
-#
-# --------------------------------------------------
-#
-# GET_DIR_NAME(<RESULT-NAME>)
-# - Get the name of the current directory
-#
-# --------------------------------------------------
-#
 # ADD_SUB_DIRS()
 # - Add all subdirectories
 #
@@ -42,16 +23,6 @@
 #
 # --------------------------------------------------
 #
-# QT_BEGIN()
-# - Call before the Qt target
-#
-# --------------------------------------------------
-#
-# QT_END()
-# - Call after the Qt target
-#
-# --------------------------------------------------
-#
 # ADD_TARGET_GDR(MODE <mode> [QT <qt>] [SOURCES <sources-list>]
 #     [LIBS_GENERAL <LIB-GENERAL-LIST>] [LIBS_DEBUG <LIB-DEBUG-LIST>] [LIBS_RELEASE <LIB-RELEASE-LIST>])
 # - MODE            : EXE / LIB / DLL
@@ -66,35 +37,9 @@
 #
 # --------------------------------------------------
 
-FUNCTION(LIST_PRINT)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "TITLE;PREFIX" "STRS" ${ARGN})
-    IF (NOT ${ARG_TITLE} STREQUAL "")
-        MESSAGE(STATUS ${ARG_TITLE})
-    ENDIF ()
-    FOREACH (STR ${ARG_STRS})
-        MESSAGE(STATUS "${ARG_PREFIX}${STR}")
-    ENDFOREACH ()
-ENDFUNCTION()
+MESSAGE(STATUS "Include Tools.cmake")
 
-FUNCTION(LIST_CHANGE_SEPARATOR)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "RST;SEPARATOR" "LIST" ${ARGN})
-    LIST(LENGTH ARG_LIST LIST_LENGTH)
-    IF ($<BOOL:${LIST_LENGTH}>)
-        SET(${ARG_RST} "" PARENT_SCOPE)
-    ELSE ()
-        SET(RST "")
-        LIST(POP_BACK ARG_LIST BACK)
-        FOREACH (ITEM ${ARG_LIST})
-            SET(RST "${RST}${ITEM}${ARG_SEPARATOR}")
-        ENDFOREACH ()
-        SET(${ARG_RST} "${RST}${BACK}" PARENT_SCOPE)
-    ENDIF ()
-ENDFUNCTION()
-
-FUNCTION(GET_DIR_NAME DIR_NAME)
-    STRING(REGEX MATCH "([^/]*)$" TMP ${CMAKE_CURRENT_SOURCE_DIR})
-    SET(${DIR_NAME} ${TMP} PARENT_SCOPE)
-ENDFUNCTION()
+INCLUDE(Qt)
 
 FUNCTION(ADD_SUB_DIRS)
     FILE(GLOB CHILDREN RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
@@ -178,18 +123,6 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
     FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${TARGET_PATH}")
     STRING(REPLACE "/" "_" TARGET_NAME "${PROJECT_NAME}/${TARGET_REL_PATH}")
     SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
-ENDFUNCTION()
-
-FUNCTION(QT_BEGIN)
-    SET(CMAKE_AUTOMOC ON PARENT_SCOPE)
-    SET(CMAKE_AUTOUIC ON PARENT_SCOPE)
-    SET(CMAKE_AUTORCC ON PARENT_SCOPE)
-ENDFUNCTION()
-
-FUNCTION(QT_END)
-    SET(CMAKE_AUTOMOC OFF PARENT_SCOPE)
-    SET(CMAKE_AUTOUIC OFF PARENT_SCOPE)
-    SET(CMAKE_AUTORCC OFF PARENT_SCOPE)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET_GDR)
