@@ -18,6 +18,10 @@
 # - Get the name of the current directory
 #
 # --------------------------------------------------
+#
+# PATH_BACK(<RST> <PATH> <TIMES>
+#
+# ----------------------------------------------------------------------------
 
 MESSAGE(STATUS "Include Basic.cmake")
 
