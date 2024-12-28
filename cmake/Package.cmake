@@ -15,16 +15,16 @@ MESSAGE(STATUS "Include Package.cmake")
 MACRO(ADD_DEP NAME VERSION)
     FIND_PACKAGE(${NAME} ${VERSION} EXACT QUIET)
     IF (${MyCMake_FOUND})
-        MESSAGE(STATUS "${DEP}-${VERSION} found")
+        MESSAGE(STATUS "${NAME}-${VERSION} found")
     ELSE ()
-        MESSAGE(STATUS "${DEP}-${VERSION} not found, fetching...")
+        MESSAGE(STATUS "${NAME}-${VERSION} not found, fetching...")
         FETCHCONTENT_DECLARE(
                 ${NAME}
-                GIT_REPOSITORY "https://github.com/shimakaze09/${DEP}"
+                GIT_REPOSITORY "https://github.com/shimakaze09/${NAME}"
                 GIT_TAG "v${VERSION}"
         )
         FETCHCONTENT_MAKEAVAILABLE(${NAME})
-        MESSAGE(STATUS "${DEP}-${VERSION} fetched")
+        MESSAGE(STATUS "${NAME}-${VERSION} fetched")
     ENDIF ()
 ENDMACRO()
 
