@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "My_config_servant_dll.h"
+#include "My_config_dll_servant.h"
 
 class DLL_SPEC Servant {
  public:
