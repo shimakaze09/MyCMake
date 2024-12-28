@@ -264,26 +264,29 @@ MACRO(EXPORT_TARGETS)
     )
 
     # Generate the version file for the config file
-    write_basic_package_version_file(
+    WRITE_BASIC_PACKAGE_VERSION_FILE(
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
             VERSION "${TUTOTIAL_VERSION_MAJOR}.${TUTOTIAL_VERSION_MINOR}"
             COMPATIBILITY AnyNewerVersion
     )
 
     # Install the configuration file
-    install(FILES
+    INSTALL(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
             DESTINATION "lib/${PROJECT_NAME}/cmake"
     )
 
     # generate the export targets for the build tree
     # needs to be after the install(TARGETS ) command
-    export(EXPORT "${PROJECT_NAME}Targets"
+    EXPORT(EXPORT "${PROJECT_NAME}Targets"
+            NAMESPACE "${PROJECT_NAME}::"
             FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
     )
 
-    install(FILES
+    INSTALL(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
             DESTINATION "lib/${PROJECT_NAME}/cmake"
     )
+
+    INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
 ENDMACRO()
