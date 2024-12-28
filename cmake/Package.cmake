@@ -29,22 +29,33 @@ MACRO(ADD_DEP NAME VERSION)
 ENDMACRO()
 
 MACRO(EXPORT_TARGETS)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC" "" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC;TARGET" "" ${ARGN})
 
     SET(PACKAGE_NAME "${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
     MESSAGE(STATUS "Export ${PACKAGE_NAME}")
-    # Install the configuration targets
-    INSTALL(EXPORT "${PROJECT_NAME}Targets"
-            FILE "${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${package_name}/cmake"
-    )
+
+    IF (NOT "${ARG_TARGET}" STREQUAL "OFF")
+        # Generate the export targets for the build tree
+        # needs to be after the install(TARGETS) command
+        EXPORT(EXPORT "${PROJECT_NAME}Targets"
+                NAMESPACE "My::"
+                FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+        )
+
+        # Install the configuration targets
+        INSTALL(EXPORT "${PROJECT_NAME}Targets"
+                FILE "${PROJECT_NAME}Targets.cmake"
+                NAMESPACE "My::"
+                DESTINATION "${PACKAGE_NAME}/cmake"
+        )
+    ENDIF ()
 
     INCLUDE(CMakePackageConfigHelpers)
 
-    # generate the config file that is includes the exports
+    # Generate the config file that is includes the exports
     CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-            INSTALL_DESTINATION "lib/${package_name}/cmake"
+            INSTALL_DESTINATION "${PACKAGE_NAME}/cmake"
             NO_SET_AND_CHECK_MACRO
             NO_CHECK_REQUIRED_COMPONENTS_MACRO
     )
@@ -56,26 +67,14 @@ MACRO(EXPORT_TARGETS)
             COMPATIBILITY AnyNewerVersion
     )
 
-    # install the configuration file
+    # Install the configuration file
     INSTALL(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-            DESTINATION "lib/${package_name}/cmake"
-    )
-
-    # generate the export targets for the build tree
-    # needs to be after the install(TARGETS ) command
-    EXPORT(EXPORT "${PROJECT_NAME}Targets"
-            NAMESPACE "${PROJECT_NAME}::"
-            FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-    )
-
-    INSTALL(FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${package_name}/cmake"
+            DESTINATION "${PACKAGE_NAME}/cmake"
     )
 
     IF (NOT "${ARG_INC}" STREQUAL "OFF")
-        INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
+        INSTALL(DIRECTORY "include" DESTINATION ${package_name})
     ENDIF ()
 ENDMACRO()
