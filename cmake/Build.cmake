@@ -40,12 +40,6 @@
 #
 # ----------------------------------------------------------------------------
 #
-# EXPORT_TARGETS([INC <INC>])
-# - export some files
-# - INC: default ON, install include/
-#
-# ----------------------------------------------------------------------------
-#
 # INIT_INSTALL_PREFIX()
 #
 # ----------------------------------------------------------------------------
@@ -255,52 +249,3 @@ FUNCTION(ADD_TARGET)
     CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST" "SOURCES;LIBS" ${ARGN})
     ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} TEST ${ARG_TEST} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()
-
-MACRO(EXPORT_TARGETS)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC" "" ${ARGN})
-
-    # Install the configuration targets
-    INSTALL(EXPORT "${PROJECT_NAME}Targets"
-            FILE "${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${PROJECT_NAME}/cmake"
-    )
-
-    INCLUDE(CMakePackageConfigHelpers)
-
-    # Generate the config file that is includes the exports
-    CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-            INSTALL_DESTINATION "lib/${PROJECT_NAME}/cmake"
-            NO_SET_AND_CHECK_MACRO
-            NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    )
-
-    # Generate the version file for the config file
-    WRITE_BASIC_PACKAGE_VERSION_FILE(
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-            VERSION "${TUTOTIAL_VERSION_MAJOR}.${TUTOTIAL_VERSION_MINOR}"
-            COMPATIBILITY AnyNewerVersion
-    )
-
-    # Install the configuration file
-    INSTALL(FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-            DESTINATION "lib/${PROJECT_NAME}/cmake"
-    )
-
-    # generate the export targets for the build tree
-    # needs to be after the install(TARGETS ) command
-    EXPORT(EXPORT "${PROJECT_NAME}Targets"
-            NAMESPACE "${PROJECT_NAME}::"
-            FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-    )
-
-    INSTALL(FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-            DESTINATION "lib/${PROJECT_NAME}/cmake"
-    )
-
-    IF (NOT "${ARG_INC}" STREQUAL "OFF")
-        INSTALL(DIRECTORY "include" DESTINATION ${CMAKE_INSTALL_PREFIX})
-    ENDIF ()
-ENDMACRO()
