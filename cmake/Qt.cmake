@@ -12,7 +12,7 @@
 
 message(STATUS "Include Qt.cmake")
 
-INCLUDE(Basic)
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Basic.cmake")
 
 # must use macro
 MACRO(QT_INIT)

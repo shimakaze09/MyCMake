@@ -1,3 +1,4 @@
 MESSAGE(STATUS "Include Tools.cmake")
 
-INCLUDE(Build)
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Build.cmake")
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Git.cmake")
