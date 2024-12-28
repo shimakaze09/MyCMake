@@ -39,6 +39,11 @@
 # - call ADD_TARGET_GDR(MODE <MODE> QT <QT> TEST <TEST> SOURCES <SOURCE-LIST> LIBS_GENERAL <LIB-LIST>)
 #
 # ----------------------------------------------------------------------------
+#
+# EXPORT_TARGETS()
+# - export
+#
+# ----------------------------------------------------------------------------
 
 MESSAGE(STATUS "Include Build.cmake")
 
@@ -126,7 +131,7 @@ ENDFUNCTION()
 
 FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
     FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${TARGET_PATH}")
-    STRING(REPLACE "/" "_" TARGET_NAME "${PROJECT_NAME}/${TARGET_REL_PATH}")
+    STRING(REPLACE "/" "_" TARGET_NAME "${TARGET_REL_PATH}")
     SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
 ENDFUNCTION()
 
@@ -190,13 +195,17 @@ FUNCTION(ADD_TARGET_GDR)
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "LIB")
         ADD_LIBRARY(${TARGET_NAME} ${ARG_SOURCES})
+        ADD_LIBRARY("${PROJECT_NAME}::${TARGET_NAME}" ALIAS ${TARGET_NAME})
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "DLL")
         ADD_LIBRARY(${TARGET_NAME} SHARED ${ARG_SOURCES})
+        ADD_LIBRARY("${PROJECT_NAME}::${TARGET_NAME}" ALIAS ${TARGET_NAME})
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "DS")
         ADD_LIBRARY("${TARGET_NAME}_shared" SHARED ${ARG_SOURCES})
+        ADD_LIBRARY("${PROJECT_NAME}::${TARGET_NAME}_shared" ALIAS "${TARGET_NAME}_shared")
         ADD_LIBRARY("${TARGET_NAME}_static" STATIC ${ARG_SOURCES})
+        ADD_LIBRARY("${PROJECT_NAME}::${TARGET_NAME}_static" ALIAS "${TARGET_NAME}_static")
         TARGET_COMPILE_DEFINITIONS("${TARGET_NAME}_static" PUBLIC -DMY_STATIC)
         SET(TARGETS "${TARGET_NAME}_shared;${TARGET_NAME}_static")
     ELSE ()
@@ -220,6 +229,7 @@ FUNCTION(ADD_TARGET_GDR)
         IF (NOT "${ARG_TEST}" STREQUAL "ON")
             MESSAGE(STATUS "INSTALL")
             INSTALL(TARGETS ${TARGET}
+                    EXPORT "${PROJECT_NAME}Targets"
                     RUNTIME DESTINATION "bin"
                     ARCHIVE DESTINATION "lib"
                     LIBRARY DESTINATION "lib")
@@ -235,3 +245,45 @@ FUNCTION(ADD_TARGET)
     CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST" "SOURCES;LIBS" ${ARGN})
     ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} TEST ${ARG_TEST} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()
+
+MACRO(EXPORT_TARGETS)
+    # Install the configuration targets
+    INSTALL(EXPORT "${PROJECT_NAME}Targets"
+            FILE "${PROJECT_NAME}Targets.cmake"
+            DESTINATION "lib/${PROJECT_NAME}/cmake"
+    )
+
+    INCLUDE(CMakePackageConfigHelpers)
+
+    # Generate the config file that is includes the exports
+    CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+            INSTALL_DESTINATION "lib/${PROJECT_NAME}/cmake"
+            NO_SET_AND_CHECK_MACRO
+            NO_CHECK_REQUIRED_COMPONENTS_MACRO
+    )
+
+    # Generate the version file for the config file
+    write_basic_package_version_file(
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+            VERSION "${TUTOTIAL_VERSION_MAJOR}.${TUTOTIAL_VERSION_MINOR}"
+            COMPATIBILITY AnyNewerVersion
+    )
+
+    # Install the configuration file
+    install(FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+            DESTINATION "lib/${PROJECT_NAME}/cmake"
+    )
+
+    # generate the export targets for the build tree
+    # needs to be after the install(TARGETS ) command
+    export(EXPORT "${PROJECT_NAME}Targets"
+            FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+    )
+
+    install(FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+            DESTINATION "lib/${PROJECT_NAME}/cmake"
+    )
+ENDMACRO()
