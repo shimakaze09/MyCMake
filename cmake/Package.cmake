@@ -12,36 +12,78 @@
 
 MESSAGE(STATUS "Include Package.cmake")
 
+SET(PACKAGE_HAS_DEPENDENCIES 0)
+
+FUNCTION(TO_PACKAGE_NAME RST NAME VERSION)
+    SET(TMP "${NAME}_${VERSION}")
+    STRING(REPLACE "." "_" TMP ${TMP})
+    SET(${RST} "${TMP}" PARENT_SCOPE)
+ENDFUNCTION()
+
 FUNCTION(PACKAGE_NAME RST)
-    SET(${RST} "${PROJECT_NAME}-${PROJECT_VERSION}" PARENT_SCOPE)
+    TO_PACKAGE_NAME(TMP ${PROJECT_NAME} ${PROJECT_VERSION})
+    SET(${RST} ${TMP} PARENT_SCOPE)
 ENDFUNCTION()
 
 MACRO(ADD_DEP NAME VERSION)
-    MESSAGE(STATUS "Looking for: ${NAME}-${VERSION}")
+    SET(PACKAGE_HAS_DEPENDENCIES 1)
+    LIST(APPEND PACKAGE_DEP_NAME_LIST ${NAME})
+    LIST(APPEND PACKAGE_DEP_VERSION_LIST ${VERSION})
+    MESSAGE(STATUS "Looking for: ${NAME} v${VERSION}")
     FIND_PACKAGE(${NAME} ${VERSION} QUIET)
     IF (${${NAME}_FOUND})
-        MESSAGE(STATUS "${NAME}-${VERSION} found")
+        MESSAGE(STATUS "${NAME} v${${NAME}_VERSION} found")
     ELSE ()
         set(ADDRESS "https://github.com/shimakaze09/${NAME}")
-        message(STATUS "${NAME}-${VERSION} not found\n"
+        message(STATUS "${NAME} v${${NAME}_VERSION} not found\n"
                 "fetching ${ADDRESS} with tag v${VERSION}")
         FETCHCONTENT_DECLARE(
                 ${NAME}
-                GIT_REPOSITORY "https://github.com/shimakaze09/${NAME}"
+                GIT_REPOSITORY "${ADDRESS}"
                 GIT_TAG "v${VERSION}"
         )
-        MESSAGE(STATUS "Building ${NAME}-${VERSION}...")
+        MESSAGE(STATUS "Building ${NAME} v${VERSION}...")
         FETCHCONTENT_MAKEAVAILABLE(${NAME})
-        MESSAGE(STATUS "${NAME}-${VERSION} built")
+        MESSAGE(STATUS "${NAME} v${VERSION} built")
     ENDIF ()
 ENDMACRO()
 
 MACRO(EXPORT_TARGETS)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "INC;TARGET" "" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "TARGET" "DIRECTORIES" ${ARGN})
 
     PACKAGE_NAME(PACKAGE_NAME)
     MESSAGE(STATUS "${PACKAGE_NAME}")
     MESSAGE(STATUS "Export ${PACKAGE_NAME}")
+
+    IF (${PACKAGE_HAS_DEPENDENCIES})
+        SET(MY_PACKAGE_INIT "MESSAGE(STATUS \"Looking for: MyCMake v0.3.0\")
+        FIND_PACKAGE(MyCMake 0.3.0 QUIET)
+        IF (\${MyCMake_FOUND})
+            MESSAGE(STATUS \"MyCMake v${MyCMake_VERSION} found\")
+        ELSE ()
+            SET(PACKAGE_ADDRESS \"https://github.com/shimakaze09/MyCMake\")
+            MESSAGE(STATUS \"MyCMake v0.3.0 not found.\")
+            MESSAGE(STATUS \"Fetch: \${PACKAGE_ADDRESS} with tag v0.3.0\")
+            FETCHCONTENT_DECLARE(
+                    MyCMake
+                    GIT_REPOSITORY \${PACKAGE_ADDRESS}
+                    GIT_TAG \"v0.3.0\"
+            )
+            MESSAGE(STATUS \"Building MyCMake v0.3.0 ...\")
+            FETCHCONTENT_MAKEAVAILABLE(MyCMake)
+            message(STATUS \"MyCMake v0.3.0 built\")
+        ENDIF ()")
+
+        MESSAGE(STATUS "[DEPENDENCIES]")
+        LIST(LENGTH PACKAGE_DEP_NAME_LIST PACKAGE_DEP_NUM)
+        MATH(EXPR PACKAGE_STOP "${PACKAGE_DEP_NUM}-1")
+        FOREACH (INDEX RANGE ${PACKAGE_STOP})
+            LIST(GET PACKAGE_DEP_NAME_LIST ${INDEX} DEP_NAME)
+            LIST(GET PACKAGE_DEP_VERSION_LIST ${INDEX} DEP_VERSION)
+            MESSAGE(STATUS "- ${DEP_NAME} v${DEP_VERSION}")
+            SET(MY_PACKAGE_INIT "${MY_PACKAGE_INIT}\nADD_DEP(${DEP_NAME} ${DEP_VERSION})")
+        ENDFOREACH ()
+    ENDIF ()
 
     IF (NOT "${ARG_TARGET}" STREQUAL "OFF")
         # Generate the export targets for the build tree
@@ -60,7 +102,6 @@ MACRO(EXPORT_TARGETS)
     ENDIF ()
 
     INCLUDE(CMakePackageConfigHelpers)
-
     # Generate the config file that is includes the exports
     CONFIGURE_PACKAGE_CONFIG_FILE(${PROJECT_SOURCE_DIR}/config/Config.cmake.in
             "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
@@ -83,7 +124,7 @@ MACRO(EXPORT_TARGETS)
             DESTINATION "${PACKAGE_NAME}/cmake"
     )
 
-    IF (NOT "${ARG_INC}" STREQUAL "OFF")
-        INSTALL(DIRECTORY "include" DESTINATION ${PACKAGE_NAME})
-    ENDIF ()
+    FOREACH (DIR ${ARG_DIRECTORIES})
+        INSTALL(DIRECTORY ${DIR} DESTINATION ${PACKAGE_NAME})
+    ENDFOREACH ()
 ENDMACRO()
