@@ -75,6 +75,6 @@ MACRO(EXPORT_TARGETS)
     )
 
     IF (NOT "${ARG_INC}" STREQUAL "OFF")
-        INSTALL(DIRECTORY "include" DESTINATION ${package_name})
+        INSTALL(DIRECTORY "include" DESTINATION ${PACKAGE_NAME})
     ENDIF ()
 ENDMACRO()

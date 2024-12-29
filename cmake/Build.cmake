@@ -232,7 +232,7 @@ FUNCTION(ADD_TARGET_GDR)
     FOREACH (TARGET ${TARGETS})
         # Export
         IF (NOT ${ARG_MODE} STREQUAL "EXE")
-            EXPORT(TARGETS ${target} NAMESPACE "My::" FILE ${PROJECT_NAME}Targets.cmake)
+            EXPORT(TARGETS ${TARGET} NAMESPACE "My::" FILE ${PROJECT_NAME}Targets.cmake APPEND)
         ENDIF ()
         # Folder
         IF (NOT ${ARG_MODE} STREQUAL "HEAD")
