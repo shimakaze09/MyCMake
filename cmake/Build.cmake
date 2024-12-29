@@ -203,10 +203,22 @@ FUNCTION(ADD_TARGET_GDR)
     ELSEIF (${ARG_MODE} STREQUAL "LIB")
         ADD_LIBRARY(${TARGET_NAME} ${ARG_SOURCES})
         ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        IF ("${ARG_INTERFACE_INC}" STREQUAL "ON")
+            TARGET_INCLUDE_DIRECTORIES(${targetName} PUBLIC
+                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                    $<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include>
+            )
+        ENDIF ()
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "HEAD")
         ADD_LIBRARY(${TARGET_NAME} INTERFACE)
         ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        IF ("${ARG_INTERFACE_INC}" STREQUAL "ON")
+            TARGET_INCLUDE_DIRECTORIES(${targetName} INTERFACE
+                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                    $<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include>
+            )
+        ENDIF ()
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "DLL")
         ADD_LIBRARY(${TARGET_NAME} SHARED ${ARG_SOURCES})
@@ -252,12 +264,6 @@ FUNCTION(ADD_TARGET_GDR)
             ENDFOREACH ()
         ENDIF ()
 
-        IF ("${INTERFACE_INC}" STREQUAL "ON")
-            target_include_directories(${target} INTERFACE
-                    $<BUILD_INTERFACE:"${PROJECT_SOURCE_DIR}/include">
-                    $<INSTALL_INTERFACE:"${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include">
-            )
-        ENDIF ()
     ENDFOREACH ()
 
     FOREACH (TARGET ${TARGETS})
