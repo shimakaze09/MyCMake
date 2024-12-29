@@ -48,6 +48,7 @@
 MESSAGE(STATUS "Include Build.cmake")
 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Package.cmake")
 
 MACRO(INIT_INSTALL_PREFIX)
     IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -193,6 +194,8 @@ FUNCTION(ADD_TARGET_GDR)
         QT_BEGIN()
     ENDIF ()
 
+    PACKAGE_NAME(PACKAGE_NAME)
+
     IF (${ARG_MODE} STREQUAL "EXE")
         ADD_EXECUTABLE(${TARGET_NAME} ${ARG_SOURCES})
         IF (MSVC)
@@ -206,7 +209,7 @@ FUNCTION(ADD_TARGET_GDR)
         IF ("${ARG_INTERFACE_INC}" STREQUAL "ON")
             TARGET_INCLUDE_DIRECTORIES(${targetName} PUBLIC
                     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                    $<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include>
+                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/include>
             )
         ENDIF ()
         SET(TARGETS ${TARGET_NAME})
@@ -216,7 +219,7 @@ FUNCTION(ADD_TARGET_GDR)
         IF ("${ARG_INTERFACE_INC}" STREQUAL "ON")
             TARGET_INCLUDE_DIRECTORIES(${targetName} INTERFACE
                     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                    $<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include>
+                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/include>
             )
         ENDIF ()
         SET(TARGETS ${TARGET_NAME})
@@ -271,8 +274,8 @@ FUNCTION(ADD_TARGET_GDR)
             INSTALL(TARGETS ${TARGET}
                     EXPORT "${PROJECT_NAME}Targets"
                     RUNTIME DESTINATION "bin"
-                    ARCHIVE DESTINATION "lib"
-                    LIBRARY DESTINATION "lib")
+                    ARCHIVE DESTINATION "${PACKAGE_NAME}/lib"
+                    LIBRARY DESTINATION "${PACKAGE_NAME}/lib")
         ENDIF ()
     ENDFOREACH ()
 
