@@ -24,13 +24,14 @@
 #
 # ----------------------------------------------------------------------------
 #
-# ADD_TARGET_GDR(MODE <MODE> [QT <QT>] [SOURCES <SOURCE-LIST>] [TEST <test>]
+# ADD_TARGET_GDR(MODE <MODE> [QT <QT>] [SOURCES <SOURCE-LIST>] [TEST <test>] [INTERFACE_INC <INTERFACE_INC>]
 #     [LIBS_GENERAL <GENERAL-LIST>] [LIBS_DEBUG <DEBUG-LIST>] [LIBS_RELEASE <RELEASE-LIST>])
-# - MODE         : EXE / LIB / DLL
-# - QT           : default OFF, for moc, uic, qrc
-# - TEST         : default OFF, test won't install
-# - GENERAL-LIST : auto add DEBUG_POSTFIX for debug mode
-# - SOURCE-LIST  : if sources is empty, call GLOBAL_GROUP_SOURCES for current path
+# - MODE          : EXE / LIB / DLL / HEAD
+# - QT            : default OFF, for moc, uic, qrc
+# - TEST          : default OFF, test won't install
+# - GENERAL-LIST  : auto add DEBUG_POSTFIX for debug mode
+# - INTERFACE_INC : default OFF, set target interface to auto include
+# - SOURCE-LIST   : if sources is empty, call GLOBAL_GROUP_SOURCES for current path
 # - Auto set target name, folder, target prefix and some properties
 #
 # ----------------------------------------------------------------------------
@@ -142,7 +143,7 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET_GDR)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST;INTERFACE_INC" "SOURCES;LIBS_GENERAL;LIBS_DEBUG;LIBS_RELEASE" ${ARGN})
     FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     SET(FOLDER_PATH "${PROJECT_NAME}/${TARGET_REL_PATH}")
     GET_TARGET_NAME(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR})
@@ -206,12 +207,6 @@ FUNCTION(ADD_TARGET_GDR)
     ELSEIF (${ARG_MODE} STREQUAL "HEAD")
         ADD_LIBRARY(${TARGET_NAME} INTERFACE)
         ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
-        FOREACH (DIR ${ARG_SOURCES})
-            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${DIR}>
-                    $<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/${DIR}>
-            )
-        ENDFOREACH ()
         SET(TARGETS ${TARGET_NAME})
     ELSEIF (${ARG_MODE} STREQUAL "DLL")
         ADD_LIBRARY(${TARGET_NAME} SHARED ${ARG_SOURCES})
@@ -230,10 +225,6 @@ FUNCTION(ADD_TARGET_GDR)
     ENDIF ()
 
     FOREACH (TARGET ${TARGETS})
-        # Export
-        IF (NOT ${ARG_MODE} STREQUAL "EXE")
-            EXPORT(TARGETS ${TARGET} NAMESPACE "My::" FILE ${PROJECT_NAME}Targets.cmake APPEND)
-        ENDIF ()
         # Folder
         IF (NOT ${ARG_MODE} STREQUAL "HEAD")
             SET_TARGET_PROPERTIES(${TARGET} PROPERTIES FOLDER ${FOLDER_PATH})
@@ -260,6 +251,13 @@ FUNCTION(ADD_TARGET_GDR)
                 TARGET_LINK_LIBRARIES(${TARGET} optimized ${LIB})
             ENDFOREACH ()
         ENDIF ()
+
+        IF ("${INTERFACE_INC}" STREQUAL "ON")
+            target_include_directories(${target} INTERFACE
+                    $<BUILD_INTERFACE:"${PROJECT_SOURCE_DIR}/include">
+                    $<INSTALL_INTERFACE:"${PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}/include">
+            )
+        ENDIF ()
     ENDFOREACH ()
 
     FOREACH (TARGET ${TARGETS})
@@ -278,6 +276,6 @@ FUNCTION(ADD_TARGET_GDR)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
-    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST" "SOURCES;LIBS" ${ARGN})
-    ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} TEST ${ARG_TEST} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
+    CMAKE_PARSE_ARGUMENTS("ARG" "" "MODE;QT;TEST;INTERFACE_INC" "SOURCES;LIBS" ${ARGN})
+    ADD_TARGET_GDR(MODE ${ARG_MODE} QT ${ARG_QT} TEST ${ARG_TEST} INTERFACE_INC ${ARG_INTERFACE_INC} SOURCES ${ARG_SOURCES} LIBS_GENERAL ${ARG_LIBS})
 ENDFUNCTION()

@@ -13,18 +13,22 @@
 MESSAGE(STATUS "Include Package.cmake")
 
 MACRO(ADD_DEP NAME VERSION)
+    MESSAGE(STATUS "Looking for: ${NAME}-${VERSION}")
     FIND_PACKAGE(${NAME} ${VERSION} EXACT QUIET)
-    IF (${MyCMake_FOUND})
+    IF (${${NAME}_FOUND})
         MESSAGE(STATUS "${NAME}-${VERSION} found")
     ELSE ()
-        MESSAGE(STATUS "${NAME}-${VERSION} not found, fetching...")
+        set(ADDRESS "https://github.com/shimakaze09/${NAME}")
+        message(STATUS "${NAME}-${VERSION} not found\n"
+                "fetching ${ADDRESS} with tag v${VERSION}")
         FETCHCONTENT_DECLARE(
                 ${NAME}
                 GIT_REPOSITORY "https://github.com/shimakaze09/${NAME}"
                 GIT_TAG "v${VERSION}"
         )
+        MESSAGE(STATUS "Building ${NAME}-${VERSION}...")
         FETCHCONTENT_MAKEAVAILABLE(${NAME})
-        MESSAGE(STATUS "${NAME}-${VERSION} fetched")
+        MESSAGE(STATUS "${NAME}-${VERSION} built")
     ENDIF ()
 ENDMACRO()
 
@@ -39,7 +43,7 @@ MACRO(EXPORT_TARGETS)
         # needs to be after the install(TARGETS) command
         EXPORT(EXPORT "${PROJECT_NAME}Targets"
                 NAMESPACE "My::"
-                FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+                # FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
         )
 
         # Install the configuration targets
