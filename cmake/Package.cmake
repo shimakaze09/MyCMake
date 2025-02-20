@@ -97,26 +97,29 @@ MACRO(EXPORT_TARGETS)
 
     IF (${PACKAGE_HAS_DEPENDENCIES})
         SET(MY_PACKAGE_INIT "
-        IF (NOT ${FETCHCONTENT_FOUND})
+        IF (NOT \${FETCHCONTENT_FOUND})
             INCLUDE(FETCHCONTENT)
         ENDIF ()
-        MESSAGE(STATUS \"Looking for: MyCMake v${MyCMake_VERSION}\")
-        FIND_PACKAGE(MyCMake {MyCMake_VERSION} QUIET)
-        IF (\${MyCMake_FOUND})
-            MESSAGE(STATUS \"MyCMake v\${MyCMake_VERSION} found\")
-        ELSE ()
-            SET(PACKAGE_ADDRESS \"https://github.com/shimakaze09/MyCMake\")
-            MESSAGE(STATUS \"MyCMake v{MyCMake_VERSION} not found.\")
-            MESSAGE(STATUS \"Fetch: \${PACKAGE_ADDRESS} with tag v{MyCMake_VERSION}\")
-            FETCHCONTENT_DECLARE(
-                    MyCMake
-                    GIT_REPOSITORY \${PACKAGE_ADDRESS}
-                    GIT_TAG \"v{MyCMake_VERSION}\"
-            )
-            MESSAGE(STATUS \"Building MyCMake v{MyCMake_VERSION} ...\")
-            FETCHCONTENT_MAKEAVAILABLE(MyCMake)
-            MESSAGE(STATUS \"MyCMake v{MyCMake_VERSION} built\")
+        IF (NOT \${MyCMake_FOUND})
+            MESSAGE(STATUS \"Looking for package: MyCMake v${MyCMake_VERSION}\")
+            FIND_PACKAGE(MyCMake ${MyCMake_VERSION} QUIET)
+            IF (\${MyCMake_FOUND})
+                MESSAGE(STATUS \"MyCMake v\${MyCMake_VERSION} found\")
+            ELSE ()
+                set(PACKAGE_ADDRESS \"https://github.com/shimakaze09/MyCMake.git\")
+                MESSAGE(STATUS \"MyCMake v${MyCMake_VERSION} not found, fetching...\")
+                MESSAGE(STATUS \"fetch: \${PACKAGE_ADDRESS} with tag v${MyCMake_VERSION}\")
+                FetchContent_Declare(
+                        MyCMake
+                        GIT_REPOSITORY \${PACKAGE_ADDRESS}
+                        GIT_TAG \"v${MyCMake_VERSION}\"
+                )
+                MESSAGE(STATUS \"Building MyCMake v${MyCMake_VERSION}...\")
+                FETCHCONTENT_DECLARE(MyCMake)
+                MESSAGE(STATUS \"MyCMake v${MyCMake_VERSION} built\")
+            ENDIF ()
         ENDIF ()
+
         IF (MSVC)
             IF (EXISTS \"\${CMAKE_CURRENT_LIST_DIR}/${PACKAGE_NAME}.natvis\")
                 IF (NOT \"\${EXIST_MY_NATVIS_EXE}\")
@@ -179,6 +182,11 @@ MACRO(EXPORT_TARGETS)
 
     FOREACH (DIR ${ARG_DIRECTORIES})
         STRING(REGEX MATCH "(.*)/" prefix ${DIR})
-        INSTALL(DIRECTORY ${DIR} DESTINATION "${PACKAGE_NAME}/${CMAKE_MATCH_1}")
+        IF ("${CMAKE_MATCH_1}" STREQUAL "")
+            SET(DESTINATION "${PACKAGE_NAME}")
+        ELSE ()
+            SET(DESTINATION "${PACKAGE_NAME}/${CMAKE_MATCH_1}")
+        ENDIF ()
+        INSTALL(DIRECTORY ${DIR} DESTINATION "${DESTINATION}")
     ENDFOREACH ()
 ENDMACRO()
