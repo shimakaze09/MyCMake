@@ -279,13 +279,6 @@ FUNCTION(ADD_TARGET_GDR)
             SET_TARGET_PROPERTIES(${TARGET} PROPERTIES FOLDER ${FOLDER_PATH})
         ENDIF ()
 
-        FOREACH (INC_DIR ${ARG_INC_DIRS})
-            TARGET_INCLUDE_DIRECTORIES(${TARGET} PUBLIC
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${INC_DIR}>
-                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/include/${INC_DIR}>
-            )
-        ENDFOREACH ()
-
         IF (${ARG_MODE} STREQUAL "HEAD")
             FOREACH (LIB ${ARG_LIBS_GENERAL})
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE general ${LIB})
@@ -299,6 +292,12 @@ FUNCTION(ADD_TARGET_GDR)
             FOREACH (LIB ${ARG_PUBLIC_GLIBS})
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE general ${LIB})
             ENDFOREACH ()
+            FOREACH (INC_DIR ${ARG_INC_DIRS})
+                TARGET_INCLUDE_DIRECTORIES(${TARGET} PUBLIC
+                        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${INC_DIR}>
+                        $<INSTALL_INTERFACE:${PACKAGE_NAME}/include/${INC_DIR}>
+                )
+            ENDFOREACH ()
         ELSE ()
             FOREACH (LIB ${ARG_LIBS_GENERAL})
                 TARGET_LINK_LIBRARIES(${TARGET} PRIVATE general ${LIB})
@@ -311,6 +310,12 @@ FUNCTION(ADD_TARGET_GDR)
             ENDFOREACH ()
             FOREACH (LIB ${ARG_PUBLIC_GLIBS})
                 TARGET_LINK_LIBRARIES(${TARGET} PUBLIC general ${LIB})
+            ENDFOREACH ()
+            FOREACH (INC_DIR ${ARG_INC_DIRS})
+                TARGET_INCLUDE_DIRECTORIES(${TARGET} PUBLIC
+                        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${INC_DIR}>
+                        $<INSTALL_INTERFACE:${PACKAGE_NAME}/include/${INC_DIR}>
+                )
             ENDFOREACH ()
         ENDIF ()
 
