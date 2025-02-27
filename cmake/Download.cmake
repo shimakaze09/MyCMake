@@ -37,7 +37,7 @@ FUNCTION(DOWNLOAD_ZIP URL ZIP_NAME HASH_TYPE HASH)
     MESSAGE(STATUS "Download File: ${ZIP_NAME}")
     FILE(DOWNLOAD ${URL} ${FILENAME}
             TIMEOUT 60  # seconds
-            EXPECTED_HASH ${hash_type}=${hash}
+            EXPECTED_HASH ${HASH_TYPE}=${HASH}
             TLS_VERIFY ON)
     # This is OS-agnostic
     EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E tar -xf ${filename}
