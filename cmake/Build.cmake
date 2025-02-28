@@ -293,7 +293,7 @@ FUNCTION(ADD_TARGET_GDR)
                 TARGET_LINK_LIBRARIES(${TARGET} INTERFACE general ${LIB})
             ENDFOREACH ()
             FOREACH (INC_DIR ${ARG_INC_DIRS})
-                TARGET_INCLUDE_DIRECTORIES(${TARGET} PUBLIC
+                TARGET_INCLUDE_DIRECTORIES(${TARGET} INTERFACE
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${INC_DIR}>
                         $<INSTALL_INTERFACE:${PACKAGE_NAME}/include/${INC_DIR}>
                 )
