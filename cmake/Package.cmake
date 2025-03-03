@@ -62,21 +62,21 @@ MACRO(ADD_DEP_PRO PROJ_NAME NAME VERSION)
     IF ("${NEED_FIND}" STREQUAL TRUE)
         LIST(APPEND ${PROJ_NAME}_DEP_NAME_LIST ${NAME})
         LIST(APPEND ${PROJ_NAME}_DEP_VERSION_LIST ${VERSION})
-        MESSAGE(STATUS "Finding package: ${NAME} v${VERSION}")
+        MESSAGE(STATUS "Finding package: ${NAME} ${VERSION}")
         FIND_PACKAGE(${NAME} ${VERSION} QUIET)
         IF (${${NAME}_FOUND})
-            MESSAGE(STATUS "${NAME} v${${NAME}_VERSION} found")
+            MESSAGE(STATUS "${NAME} ${${NAME}_VERSION} found")
         ELSE ()
             SET(ADDRESS "https://github.com/shimakaze09/${NAME}.git")
-            MESSAGE(STATUS "${NAME} v${VERSION} not found")
-            MESSAGE("fetch: ${ADDRESS} with tag v${VERSION}")
+            MESSAGE(STATUS "${NAME} ${VERSION} not found")
+            MESSAGE("fetch: ${ADDRESS} with tag ${VERSION}")
             FETCHCONTENT_DECLARE(
                     ${NAME}
                     GIT_REPOSITORY ${ADDRESS}
-                    GIT_TAG "v${VERSION}"
+                    GIT_TAG "${VERSION}"
             )
             FETCHCONTENT_MAKEAVAILABLE(${NAME})
-            MESSAGE(STATUS "${NAME} v${VERSION} built")
+            MESSAGE(STATUS "${NAME} ${VERSION} built")
         ENDIF ()
     ENDIF ()
 ENDMACRO()
