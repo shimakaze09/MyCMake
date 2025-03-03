@@ -1,5 +1,0 @@
-IF (NOT ${TEST_QT})
-    RETURN()
-ENDIF ()
-
-ADD_TARGET(MODE "EXE" QT ON LIBS "Qt5::Widgets" TEST ON)
