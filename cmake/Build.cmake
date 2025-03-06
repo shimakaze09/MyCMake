@@ -23,19 +23,24 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
-    CMAKE_PARSE_ARGUMENTS("ARG" "TEST" "MODE;RET_TARGET_NAME" "SOURCE;INC;LIB;DEFINE;C_OPTION;INC_PRIVATE;LIB_PRIVATE;DEFINE_PRIVATE;C_OPTION_PRIVATE" ${ARGN})
+    SET(ARG_LIST "")
+    LIST(APPEND ARG_LIST SOURCE INC LIB DEFINE C_OPTION L_OPTION)
+    LIST(APPEND ARG_LIST INC_INTERFACE LIB_INTERFACE DEFINE_INTERFACE C_OPTION_INTERFACE L_OPTION_INTERFACE)
+    LIST(APPEND ARG_LIST INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE)
+    CMAKE_PARSE_ARGUMENTS("ARG" "TEST" "MODE;RET_TARGET_NAME" "${ARG_LIST}" ${ARGN})
 
     # [option]
     # TEST
     # [value]
     # MODE: EXE / STATIC / SHARED / HEAD
     # RET_TARGET_NAME
-    # [list]
+    # [list]: public, interface, private
     # SOURCE: dir(recursive), file, auto add currunt dir | target_sources
     # INC: dir                                           | target_include_directories
     # LIB: <lib-target>, *.lib                           | target_link_libraries
     # DEFINE: #define ...                                | target_compile_definitions
-    # C_OPTION: compile options
+    # C_OPTION: compile options                          | target_compile_options
+    # L_OPTION: link options                             | target_link_options
 
     # Test
     IF (ARG_TEST AND NOT "${BUILD${PROJECT_NAME}TEST}")
@@ -128,20 +133,47 @@ FUNCTION(ADD_TARGET)
     LIST_PRINT(STRS ${ARG_LIB}
             TITLE "- Lib:"
             PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_LIB_INTERFACE}
+            TITLE "- Lib interface:"
+            PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB_PRIVATE}
             TITLE "- Lib private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC}
             TITLE "- Inc:"
             PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_INC_INTERFACE}
+            TITLE "- Inc interface:"
+            PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC_PRIVATE}
             TITLE "- Inc private:"
             PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_DEFINE}
+            TITLE "- Define:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
+            TITLE "- Define interface:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_DEFINE_PRIVATE}
+            TITLE "- Define private:"
+            PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION}
-            TITLE  "- Opt:"
+            TITLE "- Compile opt:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_C_OPTION_INTERFACE}
+            TITLE "- Compile opt interface:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION_PRIVATE}
-            TITLE  "- Opt private:"
+            TITLE "- Compile opt private:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_L_OPTION}
+            TITLE "- Link opt:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_L_OPTION_INTERFACE}
+            TITLE "- Link opt interface:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_L_OPTION_PRIVATE}
+            TITLE "- Link opt private:"
             PREFIX "  * ")
 
     PACKAGE_NAME(PACKAGE_NAME)
@@ -184,20 +216,22 @@ FUNCTION(ADD_TARGET)
     IF (NOT ${ARG_MODE} STREQUAL "HEAD")
         TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
                 PUBLIC ${ARG_DEFINE}
+                INTERFACE ${ARG_DEFINE_INTERFACE}
                 PRIVATE ${ARG_DEFINE_PRIVATE}
         )
     ELSE ()
-        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} INTERFACE ${ARG_DEFINE} ${ARG_DEFINE_PRIVATE})
+        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} INTERFACE ${ARG_DEFINE} ${ARG_DEFINE_PRIVATE} ${ARG_DEFINE_INTERFACE})
     ENDIF ()
 
     # Target lib
     IF (NOT ${ARG_MODE} STREQUAL "HEAD")
         TARGET_LINK_LIBRARIES(${TARGET_NAME}
                 PUBLIC ${ARG_LIB}
+                INTERFACE ${ARG_LIB_INTERFACE}
                 PRIVATE ${ARG_LIB_PRIVATE}
         )
     ELSE ()
-        TARGET_LINK_LIBRARIES(${TARGET_NAME} INTERFACE ${ARG_LIB} ${ARG_LIB_PRIVATE})
+        TARGET_LINK_LIBRARIES(${TARGET_NAME} INTERFACE ${ARG_LIB} ${ARG_LIB_PRIVATE} ${ARG_LIB_INTERFACE})
     ENDIF ()
 
     # Target inc
@@ -227,15 +261,33 @@ FUNCTION(ADD_TARGET)
             )
         ENDIF ()
     ENDFOREACH ()
+    FOREACH (INC ${ARG_INC_INTERFACE})
+        TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
+                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
+                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
+        )
+    ENDFOREACH ()
 
-    # Target option
-    IF(NOT ${ARG_MODE} STREQUAL "HEAD")
+    # Target compile option
+    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
         TARGET_COMPILE_OPTIONS(${TARGET_NAME}
                 PUBLIC ${ARG_C_OPTION}
+                INTERFACE ${ARG_C_OPTION_INTERFACE}
                 PRIVATE ${ARG_C_OPTION_PRIVATE}
         )
     ELSE ()
-        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE})
+        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE} ${ARG_C_OPTION_INTERFACE})
+    ENDIF ()
+
+    # Target link option
+    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+        TARGET_LINK_OPTIONS(${TARGET_NAME}
+                PUBLIC ${ARG_L_OPTION}
+                INTERFACE ${ARG_L_OPTION_INTERFACE}
+                PRIVATE ${ARG_L_OPTION_PRIVATE}
+        )
+    ELSE ()
+        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_L_OPTION} ${ARG_L_OPTION_PRIVATE} ${ARG_L_OPTION_INTERFACE})
     ENDIF ()
 
     IF (NOT ARG_TEST)
