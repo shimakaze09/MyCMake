@@ -23,14 +23,19 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
 ENDFUNCTION()
 
 FUNCTION(ADD_TARGET)
-    CMAKE_PARSE_ARGUMENTS("ARG" "TEST" "MODE" "SOURCE;DEFINE;LIB;INC;DEFINE_PRIVATE;LIB_PRIVATE;INC_PRIVATE" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "TEST" "MODE;RET_TARGET_NAME" "SOURCE;INC;LIB;DEFINE;C_OPTION;INC_PRIVATE;LIB_PRIVATE;DEFINE_PRIVATE;C_OPTION_PRIVATE" ${ARGN})
 
-    # Option: TEST
+    # [option]
+    # TEST
+    # [value]
     # MODE: EXE / STATIC / SHARED / HEAD
-    # SOURCE: dir(recursive), file, auto add current dir
-    # DEFINE: #define ...
-    # LIB: <lib-target>, *.lib
-    # INC: dir
+    # RET_TARGET_NAME
+    # [list]
+    # SOURCE: dir(recursive), file, auto add currunt dir | target_sources
+    # INC: dir                                           | target_include_directories
+    # LIB: <lib-target>, *.lib                           | target_link_libraries
+    # DEFINE: #define ...                                | target_compile_definitions
+    # C_OPTION: compile options
 
     # Test
     IF (ARG_TEST AND NOT "${BUILD${PROJECT_NAME}TEST}")
@@ -102,6 +107,9 @@ FUNCTION(ADD_TARGET)
     SET(TARGET_FOLDER "${PROJECT_NAME}/${TARGET_REL_PATH}")
 
     GET_TARGET_NAME(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR})
+    IF (NOT "${ARG_RST_TARGET_NAME}" STREQUAL "")
+        SET(${ARG_RET_TARGET_NAME} ${TARGET_NAME} PARENT_SCOPE)
+    ENDIF ()
 
     # Print
     MESSAGE(STATUS "----------")
@@ -128,6 +136,12 @@ FUNCTION(ADD_TARGET)
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC_PRIVATE}
             TITLE "- Inc private:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_C_OPTION}
+            TITLE  "- Opt:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${ARG_C_OPTION_PRIVATE}
+            TITLE  "- Opt private:"
             PREFIX "  * ")
 
     PACKAGE_NAME(PACKAGE_NAME)
@@ -213,6 +227,16 @@ FUNCTION(ADD_TARGET)
             )
         ENDIF ()
     ENDFOREACH ()
+
+    # Target option
+    IF(NOT ${ARG_MODE} STREQUAL "HEAD")
+        TARGET_COMPILE_OPTIONS(${TARGET_NAME}
+                PUBLIC ${ARG_C_OPTION}
+                PRIVATE ${ARG_C_OPTION_PRIVATE}
+        )
+    ELSE ()
+        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE})
+    ENDIF ()
 
     IF (NOT ARG_TEST)
         INSTALL(TARGETS ${TARGET_NAME}
