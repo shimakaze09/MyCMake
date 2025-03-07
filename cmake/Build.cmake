@@ -77,7 +77,10 @@ FUNCTION(ADD_TARGET)
                     ${ITEM}/*.frag # glsl fragment shader
                     ${ITEM}/*.comp # glsl compute shader
 
-                    ${ITEM}/*.hlsl
+                    # ${ITEM}/*.hlsl
+                    # ${ITEM}/*.hlsli
+                    # ${ITEM}/*.fx
+                    # ${ITEM}/*.fxh
 
                     # QT files
                     ${ITEM}/*.qrc
