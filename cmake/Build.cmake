@@ -28,6 +28,9 @@ FUNCTION(EXPAND_SOURCES RST SOURCES)
                     # CMake
                     ${ITEM}/*.cmake
 
+                    # msvc
+                    ${ITEM}/*.natvis
+
                     # INTERFACE files
                     ${ITEM}/*.h
                     ${ITEM}/*.hpp
@@ -84,6 +87,32 @@ FUNCTION(ADD_TARGET)
     # default
     IF ("${ARG_ADD_CURRENT_TO}" STREQUAL "")
         SET(ARG_ADD_CURRENT_TO "PRIVATE")
+    ENDIF ()
+
+    # public, private -> interface
+    IF ("${ARG_MODE}" STREQUAL "INTERFACE")
+        LIST(APPEND ARG_SOURCE_INTERFACE ${ARG_SOURCE_PUBLIC} ${ARG_SOURCE})
+        LIST(APPEND ARG_INC_INTERFACE ${ARG_INC} ${ARG_INC_PRIVATE})
+        LIST(APPEND ARG_LIB_INTERFACE ${ARG_LIB} ${ARG_LIB_PRIVATE})
+        LIST(APPEND ARG_DEFINE_INTERFACE ${ARG_DEFINE} ${ARG_DEFINE_PRIVATE})
+        LIST(APPEND ARG_C_OPTION_INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE})
+        LIST(APPEND ARG_L_OPTION_INTERFACE ${ARG_L_OPTION} ${ARG_L_OPTION_PRIVATE})
+        SET(ARG_SOURCE_PUBLIC "")
+        SET(ARG_SOURCE "")
+        SET(ARG_INC "")
+        SET(ARG_INC_PRIVATE "")
+        SET(ARG_LIB "")
+        SET(ARG_LIB_PRIVATE "")
+        SET(ARG_DEFINE "")
+        SET(ARG_DEFINE_PRIVATE "")
+        SET(ARG_C_OPTION "")
+        SET(ARG_C_OPTION_PRIVATE "")
+        SET(ARG_L_OPTION "")
+        SET(ARG_L_OPTION_PRIVATE "")
+
+        IF (NOT "${ARG_ADD_CURRENT_TO}" STREQUAL "NONE")
+            SET(ARG_ADD_CURRENT_TO "INTERFACE")
+        ENDIF ()
     ENDIF ()
 
     # [option]
@@ -156,13 +185,13 @@ FUNCTION(ADD_TARGET)
     MESSAGE(STATUS "- FOLDER : ${TARGET_FOLDER}")
     MESSAGE(STATUS "- MODE: ${ARG_MODE}")
     LIST_PRINT(STRS ${SOURCES_PRIVATE}
-            TITLE  "- Sources (private):"
+            TITLE "- Sources (private):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${SOURCES_INTERFACE}
-            TITLE  "- Sources interface:"
+            TITLE "- Sources interface:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${SOURCES_PUBLIC}
-            TITLE  "- Sources public:"
+            TITLE "- Sources public:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE}
             TITLE "- Define (public):"
@@ -171,7 +200,7 @@ FUNCTION(ADD_TARGET)
             TITLE "- Define interface:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
-            TITLE  "- Define private:"
+            TITLE "- Define private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB}
             TITLE "- Lib (public):"
@@ -249,93 +278,70 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Target sources
-    IF(NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        TARGET_SOURCES(${TARGET_NAME}
-                PUBLIC ${SOURCES_PUBLIC}
-                INTERFACE ${SOURCES_INTERFACE}
-                PRIVATE ${SOURCES_PRIVATE}
+    FOREACH (SRC ${SOURCES_PUBLIC})
+        GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
+        STRING(REPLACE "${PROJECT_SOURCE_DIR}/" "" REL_SRC ${ABS_SRC})
+        TARGET_SOURCES(${targetName} PUBLIC
+                $<BUILD_INTERFACE:${ABS_SRC}>
+                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_SRC}>
         )
-    ELSE ()
-        TARGET_SOURCES(${TARGET_NAME} INTERFACE ${SOURCES_PUBLIC} ${SOURCES_INTERFACE} ${SOURCES_PRIVATE})
-    ENDIF ()
+    ENDFOREACH ()
+    TARGET_SOURCES(${TARGET_NAME} PRIVATE ${SOURCES_PRIVATE})
+    FOREACH (SRC ${sources_interface})
+        GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
+        STRING(REPLACE "${PROJECT_SOURCE_DIR}/" "" REL_SRC ${ABS_SRC})
+        TARGET_SOURCES(${targetName} INTERFACE
+                $<BUILD_INTERFACE:${ABS_SRC}>
+                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_SRC}>
+        )
+    ENDFOREACH ()
 
     # Target define
-    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
-                PUBLIC ${ARG_DEFINE}
-                INTERFACE ${ARG_DEFINE_INTERFACE}
-                PRIVATE ${ARG_DEFINE_PRIVATE}
-        )
-    ELSE ()
-        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} INTERFACE ${ARG_DEFINE} ${ARG_DEFINE_PRIVATE} ${ARG_DEFINE_INTERFACE})
-    ENDIF ()
+    TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
+            PUBLIC ${ARG_DEFINE}
+            INTERFACE ${ARG_DEFINE_INTERFACE}
+            PRIVATE ${ARG_DEFINE_PRIVATE}
+    )
 
     # Target lib
-    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        TARGET_LINK_LIBRARIES(${TARGET_NAME}
-                PUBLIC ${ARG_LIB}
-                INTERFACE ${ARG_LIB_INTERFACE}
-                PRIVATE ${ARG_LIB_PRIVATE}
-        )
-    ELSE ()
-        TARGET_LINK_LIBRARIES(${TARGET_NAME} INTERFACE ${ARG_LIB} ${ARG_LIB_PRIVATE} ${ARG_LIB_INTERFACE})
-    ENDIF ()
+    TARGET_LINK_LIBRARIES(${TARGET_NAME}
+            PUBLIC ${ARG_LIB}
+            INTERFACE ${ARG_LIB_INTERFACE}
+            PRIVATE ${ARG_LIB_PRIVATE}
+    )
 
     # Target inc
     FOREACH (INC ${ARG_INC})
-        IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
-                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
-            )
-        ELSE ()
-            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
-                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
-            )
-        ENDIF ()
+        GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
+        STRING(REPLACE "${PROJECT_SOURCE_DIR}/" "" REL_INC ${ABS_INC})
+        TARGET_INCLUDE_DIRECTORIES(${targetName} PUBLIC
+                $<BUILD_INTERFACE:${ABS_INC}>
+                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
+        )
     ENDFOREACH ()
-    FOREACH (INC ${ARG_INC_PRIVATE})
-        IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
-                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
-            )
-        ELSE ()
-            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
-                    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
-                    $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
-            )
-        ENDIF ()
-    ENDFOREACH ()
+    TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE ${ARG_INC_PRIVATE})
     FOREACH (INC ${ARG_INC_INTERFACE})
+        GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
+        STRING(REPLACE "${PROJECT_SOURCE_DIR}/" "" REL_INC ${ABS_INC})
         TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
-                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
-                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
+                $<BUILD_INTERFACE:${ABS_INC}>
+                $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
         )
     ENDFOREACH ()
 
     # Target compile option
-    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        TARGET_COMPILE_OPTIONS(${TARGET_NAME}
-                PUBLIC ${ARG_C_OPTION}
-                INTERFACE ${ARG_C_OPTION_INTERFACE}
-                PRIVATE ${ARG_C_OPTION_PRIVATE}
-        )
-    ELSE ()
-        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE} ${ARG_C_OPTION_INTERFACE})
-    ENDIF ()
+    TARGET_COMPILE_OPTIONS(${TARGET_NAME}
+            PUBLIC ${ARG_C_OPTION}
+            INTERFACE ${ARG_C_OPTION_INTERFACE}
+            PRIVATE ${ARG_C_OPTION_PRIVATE}
+    )
 
     # Target link option
-    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        TARGET_LINK_OPTIONS(${TARGET_NAME}
-                PUBLIC ${ARG_L_OPTION}
-                INTERFACE ${ARG_L_OPTION_INTERFACE}
-                PRIVATE ${ARG_L_OPTION_PRIVATE}
-        )
-    ELSE ()
-        TARGET_COMPILE_OPTIONS(${TARGET_NAME} INTERFACE ${ARG_L_OPTION} ${ARG_L_OPTION_PRIVATE} ${ARG_L_OPTION_INTERFACE})
-    ENDIF ()
+    TARGET_LINK_OPTIONS(${TARGET_NAME}
+            PUBLIC ${ARG_L_OPTION}
+            INTERFACE ${ARG_L_OPTION_INTERFACE}
+            PRIVATE ${ARG_L_OPTION_PRIVATE}
+    )
 
     IF (NOT ARG_TEST)
         INSTALL(TARGETS ${TARGET_NAME}
