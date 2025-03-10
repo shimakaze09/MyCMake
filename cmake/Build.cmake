@@ -31,6 +31,7 @@ FUNCTION(ADD_TARGET)
 
     # [option]
     # TEST
+    # QT
     # [value]
     # MODE: EXE / STATIC / SHARED / HEAD
     # RET_TARGET_NAME
@@ -45,6 +46,10 @@ FUNCTION(ADD_TARGET)
     # Test
     IF (ARG_TEST AND NOT "${BUILD${PROJECT_NAME}TEST}")
         RETURN()
+    ENDIF ()
+
+    IF (QT)
+        QT_BEGIN()
     ENDIF ()
 
     # Sources
@@ -300,5 +305,9 @@ FUNCTION(ADD_TARGET)
                 ARCHIVE DESTINATION "${PACKAGE_NAME}/lib"
                 LIBRARY DESTINATION "${PACKAGE_NAME}/lib"
         )
+    ENDIF ()
+
+    IF (QT)
+        QT_END()
     ENDIF ()
 ENDFUNCTION()
