@@ -1,7 +1,6 @@
 MESSAGE(STATUS "Include Build.cmake")
 
 FUNCTION(ADD_SUB_DIRS_REC PATH)
-    MESSAGE(STATUS "----------")
     FILE(GLOB_RECURSE CHILDREN LIST_DIRECTORIES true ${CMAKE_CURRENT_SOURCE_DIR}/${PATH}/*)
     SET(DIRS "")
     LIST(APPEND CHILDREN "${CMAKE_CURRENT_SOURCE_DIR}/${PATH}")
@@ -10,7 +9,6 @@ FUNCTION(ADD_SUB_DIRS_REC PATH)
             LIST(APPEND DIRS ${ITEM})
         ENDIF ()
     ENDFOREACH ()
-    LIST_PRINT(TITLE "Directories:" PREFIX "- " STRS ${DIRS})
     FOREACH (DIR ${DIRS})
         ADD_SUBDIRECTORY(${DIR})
     ENDFOREACH ()
@@ -22,46 +20,15 @@ FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
     SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
 ENDFUNCTION()
 
-FUNCTION(ADD_TARGET)
-    SET(ARG_LIST "")
-    LIST(APPEND ARG_LIST SOURCE INC LIB DEFINE C_OPTION L_OPTION)
-    LIST(APPEND ARG_LIST INC_INTERFACE LIB_INTERFACE DEFINE_INTERFACE C_OPTION_INTERFACE L_OPTION_INTERFACE)
-    LIST(APPEND ARG_LIST INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE)
-    CMAKE_PARSE_ARGUMENTS("ARG" "TEST" "MODE;RET_TARGET_NAME" "${ARG_LIST}" ${ARGN})
-
-    # [option]
-    # TEST
-    # QT
-    # [value]
-    # MODE: EXE / STATIC / SHARED / HEAD
-    # RET_TARGET_NAME
-    # [list]: public, interface, private
-    # SOURCE: dir(recursive), file, auto add currunt dir | target_sources
-    # INC: dir                                           | target_include_directories
-    # LIB: <lib-target>, *.lib                           | target_link_libraries
-    # DEFINE: #define ...                                | target_compile_definitions
-    # C_OPTION: compile options                          | target_compile_options
-    # L_OPTION: link options                             | target_link_options
-
-    # Test
-    IF (ARG_TEST AND NOT "${BUILD${PROJECT_NAME}TEST}")
-        RETURN()
-    ENDIF ()
-
-    IF (QT)
-        QT_BEGIN()
-    ENDIF ()
-
-    # Sources
-    SET(SOURCES "")
-    LIST(APPEND ARG_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
-    FOREACH (ITEM ${ARG_SOURCE})
+FUNCTION(EXPAND_SOURCES RST SOURCES)
+    SET(TMP_RST "")
+    FOREACH (ITEM ${${SOURCES}})
         IF (IS_DIRECTORY ${ITEM})
             FILE(GLOB_RECURSE ITEM_SRCS
                     # CMake
                     ${ITEM}/*.cmake
 
-                    # Header files
+                    # INTERFACE files
                     ${ITEM}/*.h
                     ${ITEM}/*.hpp
                     ${ITEM}/*.hxx
@@ -91,29 +58,89 @@ FUNCTION(ADD_TARGET)
                     ${ITEM}/*.qrc
                     ${ITEM}/*.ui
             )
-            LIST(APPEND SOURCES ${ITEM_SRCS})
+            LIST(APPEND TMP_RST ${ITEM_SRCS})
         ELSE ()
-            IF (NOT IS_ABSOLUTE ${ITEM})
-                SET(ITEM "${CMAKE_CURRENT_LIST_DIR}/${ITEM}")
+            IF (NOT IS_ABSOLUTE "${ITEM}")
+                GET_FILENAME_COMPONENT(ITEM "${ITEM}" ABSOLUTE)
             ENDIF ()
-            LIST(APPEND SOURCES ${ITEM})
+            LIST(APPEND TMP_RST ${ITEM})
         ENDIF ()
     ENDFOREACH ()
+    SET(${RST} ${TMP_RST} PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(ADD_TARGET)
+    MESSAGE(STATUS "----------")
+
+    SET(ARG_LIST "")
+    # public
+    LIST(APPEND ARG_LIST SOURCE_PUBLIC INC LIB DEFINE C_OPTION L_OPTION)
+    # interface
+    LIST(APPEND ARG_LIST SOURCE_INTERFACE INC_INTERFACE LIB_INTERFACE DEFINE_INTERFACE C_OPTION_INTERFACE L_OPTION_INTERFACE)
+    # private
+    LIST(APPEND ARG_LIST SOURCE INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE)
+    CMAKE_PARSE_ARGUMENTS("ARG" "TEST;QT;NOT_GROUP" "MODE;ADD_CURRENT_TO;RET_TARGET_NAME" "${ARG_LIST}" ${ARGN})
+
+    # default
+    IF ("${ARG_ADD_CURRENT_TO}" STREQUAL "")
+        SET(ARG_ADD_CURRENT_TO "PRIVATE")
+    ENDIF ()
+
+    # [option]
+    # TEST
+    # QT
+    # NOT_GROUP
+    # [value]
+    # MODE: EXE / STATIC / SHARED / INTERFACE
+    # ADD_CURRENT_TO: PUBLIC / INTERFACE / PRIVATE (default) / NONE
+    # RET_TARGET_NAME
+    # [list] : public, interface, private
+    # SOURCE: dir(recursive), file, auto add current dir | target_sources
+    # INC: dir                                           | target_include_directories
+    # LIB: <lib-target>, *.lib                           | target_link_libraries
+    # DEFINE: #define ...                                | target_compile_definitions
+    # C_OPTION: compile options                          | target_compile_options
+    # L_OPTION: link options                             | target_link_options
+
+    # Test
+    IF (ARG_TEST AND NOT "${BUILD_TEST_${PROJECT_NAME}}")
+        RETURN()
+    ENDIF ()
+
+    IF (ARG_QT)
+        QT_BEGIN()
+    ENDIF ()
+
+    # Sources
+    IF ("${ARG_ADD_CURRENT_TO}" STREQUAL "PUBLIC")
+        LIST(APPEND ARG_SOURCE_PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    ELSEIF ("${ARG_ADD_CURRENT_TO}" STREQUAL "INTERFACE")
+        LIST(APPEND ARG_SOURCE_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+    ELSEIF ("${ARG_ADD_CURRENT_TO}" STREQUAL "PRIVATE")
+        LIST(APPEND ARG_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
+    ELSEIF (NOT "${ARG_ADD_CURRENT_TO}" STREQUAL "NONE")
+        MESSAGE(FATAL_ERROR "ADD_CURRENT_TO [${ARG_ADD_CURRENT_TO}] is not supported")
+    ENDIF ()
+    EXPAND_SOURCES(SOURCES_PUBLIC ARG_SOURCE_PUBLIC)
+    EXPAND_SOURCES(SOURCES_INTERFACE ARG_SOURCE_INTERFACE)
+    EXPAND_SOURCES(SOURCES_PRIVATE ARG_SOURCE)
 
     # Group
-    FOREACH (SOURCE ${SOURCES})
-        GET_FILENAME_COMPONENT(DIR ${SOURCE} DIRECTORY)
-        IF (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${DIR})
-            SOURCE_GROUP("src" FILES ${SOURCE})
-        ELSE ()
-            FILE(RELATIVE_PATH RDIR ${PROJECT_SOURCE_DIR} ${DIR})
-            IF (MSVC)
-                STRING(REPLACE "/" "\\" RDIR_MSVC ${RDIR})
-                SET(RDIR "${RDIR_MSVC}")
+    IF (NOT NOT_GROUP)
+        FOREACH (SOURCE ${SOURCES})
+            GET_FILENAME_COMPONENT(DIR ${SOURCE} DIRECTORY)
+            IF (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${DIR})
+                SOURCE_GROUP("src" FILES ${SOURCE})
+            ELSE ()
+                FILE(RELATIVE_PATH RDIR ${PROJECT_SOURCE_DIR} ${DIR})
+                IF (MSVC)
+                    STRING(REPLACE "/" "\\" RDIR_MSVC ${RDIR})
+                    SET(RDIR "${RDIR_MSVC}")
+                ENDIF ()
+                SOURCE_GROUP()
             ENDIF ()
-            SOURCE_GROUP(${RDIR} FILES ${SOURCE})
-        ENDIF ()
-    ENDFOREACH ()
+        ENDFOREACH ()
+    ENDIF ()
 
     # Target folder
     FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/..")
@@ -125,21 +152,29 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Print
-    MESSAGE(STATUS "----------")
     MESSAGE(STATUS "- NAME: ${TARGET_NAME}")
     MESSAGE(STATUS "- FOLDER : ${TARGET_FOLDER}")
     MESSAGE(STATUS "- MODE: ${ARG_MODE}")
+    LIST_PRINT(STRS ${SOURCES_PRIVATE}
+            TITLE  "- Sources (private):"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${SOURCES_INTERFACE}
+            TITLE  "- Sources interface:"
+            PREFIX "  * ")
+    LIST_PRINT(STRS ${SOURCES_PUBLIC}
+            TITLE  "- Sources public:"
+            PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE}
-            TITLE "- Define:"
+            TITLE "- Define (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_PRIVATE}
-            TITLE "- Define private:"
+            TITLE "- Define interface:"
             PREFIX "  * ")
-    LIST_PRINT(STRS ${SOURCES}
-            TITLE "- Sources:"
+    LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
+            TITLE  "- Define private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB}
-            TITLE "- Lib:"
+            TITLE "- Lib (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB_INTERFACE}
             TITLE "- Lib interface:"
@@ -157,7 +192,7 @@ FUNCTION(ADD_TARGET)
             TITLE "- Inc private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE}
-            TITLE "- Define:"
+            TITLE "- Define (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
             TITLE "- Define interface:"
@@ -166,22 +201,22 @@ FUNCTION(ADD_TARGET)
             TITLE "- Define private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION}
-            TITLE "- Compile opt:"
+            TITLE "- Compile option (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION_INTERFACE}
-            TITLE "- Compile opt interface:"
+            TITLE "- Compile option interface:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION_PRIVATE}
-            TITLE "- Compile opt private:"
+            TITLE "- Compile option private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION}
-            TITLE "- Link opt:"
+            TITLE "- Link option (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION_INTERFACE}
-            TITLE "- Link opt interface:"
+            TITLE "- Link option interface:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION_PRIVATE}
-            TITLE "- Link opt private:"
+            TITLE "- Link option private:"
             PREFIX "  * ")
 
     PACKAGE_NAME(PACKAGE_NAME)
@@ -200,7 +235,7 @@ FUNCTION(ADD_TARGET)
     ELSEIF ("${ARG_MODE}" STREQUAL "SHARED")
         ADD_LIBRARY(${TARGET_NAME} SHARED)
         ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
-    ELSEIF ("${ARG_MODE}" STREQUAL "HEAD")
+    ELSEIF ("${ARG_MODE}" STREQUAL "INTERFACE")
         ADD_LIBRARY(${TARGET_NAME} INTERFACE)
         ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
     ELSE ()
@@ -209,19 +244,23 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Folder
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
         SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES FOLDER ${TARGET_FOLDER})
     ENDIF ()
 
-    # Target source
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
-        TARGET_SOURCES(${TARGET_NAME} PRIVATE ${SOURCES})
+    # Target sources
+    IF(NOT ${ARG_MODE} STREQUAL "INTERFACE")
+        TARGET_SOURCES(${TARGET_NAME}
+                PUBLIC ${SOURCES_PUBLIC}
+                INTERFACE ${SOURCES_INTERFACE}
+                PRIVATE ${SOURCES_PRIVATE}
+        )
     ELSE ()
-        TARGET_SOURCES(${TARGET_NAME} INTERFACE ${SOURCES})
+        TARGET_SOURCES(${TARGET_NAME} INTERFACE ${SOURCES_PUBLIC} ${SOURCES_INTERFACE} ${SOURCES_PRIVATE})
     ENDIF ()
 
     # Target define
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
         TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
                 PUBLIC ${ARG_DEFINE}
                 INTERFACE ${ARG_DEFINE_INTERFACE}
@@ -232,7 +271,7 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Target lib
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
         TARGET_LINK_LIBRARIES(${TARGET_NAME}
                 PUBLIC ${ARG_LIB}
                 INTERFACE ${ARG_LIB_INTERFACE}
@@ -244,7 +283,7 @@ FUNCTION(ADD_TARGET)
 
     # Target inc
     FOREACH (INC ${ARG_INC})
-        IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+        IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
             TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
                     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
                     $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
@@ -257,7 +296,7 @@ FUNCTION(ADD_TARGET)
         ENDIF ()
     ENDFOREACH ()
     FOREACH (INC ${ARG_INC_PRIVATE})
-        IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+        IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
             TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
                     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/${INC}>
                     $<INSTALL_INTERFACE:${PACKAGE_NAME}/${INC}>
@@ -277,7 +316,7 @@ FUNCTION(ADD_TARGET)
     ENDFOREACH ()
 
     # Target compile option
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
         TARGET_COMPILE_OPTIONS(${TARGET_NAME}
                 PUBLIC ${ARG_C_OPTION}
                 INTERFACE ${ARG_C_OPTION_INTERFACE}
@@ -288,7 +327,7 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Target link option
-    IF (NOT ${ARG_MODE} STREQUAL "HEAD")
+    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
         TARGET_LINK_OPTIONS(${TARGET_NAME}
                 PUBLIC ${ARG_L_OPTION}
                 INTERFACE ${ARG_L_OPTION_INTERFACE}
@@ -307,7 +346,9 @@ FUNCTION(ADD_TARGET)
         )
     ENDIF ()
 
-    IF (QT)
+    IF (ARG_QT)
         QT_END()
     ENDIF ()
+
+    MESSAGE(STATUS "----------")
 ENDFUNCTION()

@@ -1,4 +1,6 @@
-ADD_TARGET(TEST
+ADD_TARGET(
+        TEST
         MODE EXE
-        SOURCE "${PROJECT_SOURCE_DIR}/cmake"
+        SOURCE
+        "${PROJECT_SOURCE_DIR}/cmake"
 )
