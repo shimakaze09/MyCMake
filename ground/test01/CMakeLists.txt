@@ -1,0 +1,33 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.20 FATAL_ERROR)
+PROJECT(Test VERSION 1.2.3.4)
+
+SET(v0 ON)
+
+IF (v0)
+    MESSAGE(STATUS "v0 true")
+ELSE ()
+    MESSAGE(FATAL_ERROR "error")
+ENDIF ()
+
+SET(idx -1)
+IF (idx EQUAL -1)
+    MESSAGE(STATUS "idx == -1 true")
+ELSE ()
+    MESSAGE(FATAL_ERROR "error")
+ENDIF ()
+
+SET(A 0.1.2)
+SET(B 0.1.2)
+IF (A EQUAL B)
+    MESSAGE(STATUS "A == B true")
+ELSE ()
+    MESSAGE(FATAL_ERROR "error")
+ENDIF ()
+
+SET(A_B TRUE)
+SET(pB B)
+IF (A_${pB})
+    MESSAGE(STATUS "A_\${pB} true")
+ELSE ()
+    MESSAGE(FATAL_ERROR "error")
+ENDIF ()
