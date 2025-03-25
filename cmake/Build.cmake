@@ -191,9 +191,9 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Print
-    MESSAGE(STATUS "- NAME: ${TARGET_NAME}")
-    MESSAGE(STATUS "- FOLDER : ${TARGET_FOLDER}")
-    MESSAGE(STATUS "- MODE: ${ARG_MODE}")
+    MESSAGE(STATUS "- Name: ${TARGET_NAME}")
+    MESSAGE(STATUS "- Folder : ${TARGET_FOLDER}")
+    MESSAGE(STATUS "- Mode: ${ARG_MODE}")
     LIST_PRINT(STRS ${SOURCES_PRIVATE}
             TITLE "- Sources (private):"
             PREFIX "  * ")
@@ -222,7 +222,7 @@ FUNCTION(ADD_TARGET)
             TITLE "- Lib private:"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC}
-            TITLE "- Inc:"
+            TITLE "- Inc (public):"
             PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC_INTERFACE}
             TITLE "- Inc interface:"
@@ -346,7 +346,7 @@ FUNCTION(ADD_TARGET)
     ENDFOREACH ()
     FOREACH (INC ${ARG_INC_INTERFACE})
         GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${ABS_INC})
+        FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${INC})
         TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
                 $<BUILD_INTERFACE:${ABS_INC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
