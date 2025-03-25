@@ -84,13 +84,13 @@ MACRO(ADD_DEP NAME VERSION)
 ENDMACRO()
 
 MACRO(EXPORT_TARGETS)
-    CMAKE_PARSE_ARGUMENTS("ARG" "TARGET" "" "DIRECTORIES" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS("ARG" "TARGET;CPM" "" "DIRECTORIES" ${ARGN})
 
     PACKAGE_NAME(PACKAGE_NAME)
     MESSAGE(STATUS "${PACKAGE_NAME}")
     MESSAGE(STATUS "Export ${PACKAGE_NAME}")
 
-    IF (${PROJECT_NAME}_HAS_DEPENDENCIES)
+    IF (ARG_CPM OR ${PROJECT_NAME}_HAS_DEPENDENCIES)
         SET(MY_PACKAGE_INIT "
         IF (NOT FETCHCONTENT_FOUND)
             INCLUDE(FETCHCONTENT)
@@ -99,12 +99,12 @@ MACRO(EXPORT_TARGETS)
             MESSAGE(STATUS \"Looking for package: MyCMake ${MyCMake_VERSION}\")
             FIND_PACKAGE(MyCMake ${MyCMake_VERSION} EXACT QUIET)
             IF (NOT MyCMake_FOUND)
-                SET(${PROJECT_NAME}_ADDRESS \"https://github.com/shimakaze09/MyCMake.git\")
+                SET(MyCMake_ADDRESS \"https://github.com/shimakaze09/MyCMake.git\")
                 MESSAGE(STATUS \"MyCMake ${MyCMake_VERSION} not found\")
-                MESSAGE(STATUS \"fetch: \${${PROJECT_NAME}_ADDRESS} with tag \${MyCMake_VERSION}\")
+                MESSAGE(STATUS \"fetch: \${MyCMake_ADDRESS} with tag \${MyCMake_VERSION}\")
                 FETCHCONTENT_DECLARE(
                         MyCMake
-                        GIT_REPOSITORY \${${PROJECT_NAME}_ADDRESS}
+                        GIT_REPOSITORY \${MyCMake_ADDRESS}
                         GIT_TAG ${MyCMake_VERSION}
                 )
                 MESSAGE(STATUS \"Building MyCMake ${MyCMake_VERSION}...\")
@@ -114,15 +114,18 @@ MACRO(EXPORT_TARGETS)
         ENDIF ()
         ")
 
-        MESSAGE(STATUS "[Dependencies]")
         LIST(LENGTH ${PROJECT_NAME}_DEP_NAME_LIST DEP_NUM)
-        MATH(EXPR STOP "${DEP_NUM}-1")
-        FOREACH (INDEX RANGE ${STOP})
-            LIST(GET ${PROJECT_NAME}_DEP_NAME_LIST ${INDEX} DEP_NAME)
-            LIST(GET ${PROJECT_NAME}_DEP_VERSION_LIST ${INDEX} DEP_VERSION)
-            MESSAGE(STATUS "- ${DEP_NAME} ${DEP_VERSION}")
-            STRING(APPEND MY_PACKAGE_INIT "ADD_DEP_PRO(${PROJECT_NAME} ${DEP_NAME} ${DEP_VERSION})\n")
-        ENDFOREACH ()
+        IF (DEP_NUM GREATER 0)
+            MESSAGE(STATUS "[Dependencies]")
+            LIST(LENGTH ${PROJECT_NAME}_DEP_NAME_LIST DEP_NUM)
+            MATH(EXPR STOP "${DEP_NUM}-1")
+            FOREACH (INDEX RANGE ${STOP})
+                LIST(GET ${PROJECT_NAME}_DEP_NAME_LIST ${INDEX} DEP_NAME)
+                LIST(GET ${PROJECT_NAME}_DEP_VERSION_LIST ${INDEX} DEP_VERSION)
+                MESSAGE(STATUS "- ${DEP_NAME} ${DEP_VERSION}")
+                STRING(APPEND MY_PACKAGE_INIT "ADD_DEP_PRO(${PROJECT_NAME} ${DEP_NAME} ${DEP_VERSION})\n")
+            ENDFOREACH ()
+        ENDIF ()
     ENDIF ()
 
     IF (ARG_TARGET)

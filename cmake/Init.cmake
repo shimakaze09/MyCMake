@@ -15,6 +15,14 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Git.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Package.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
 
+DOWNLOAD_FILE(
+        https://cdn.jsdelivr.net/gh/shimakaze09/MyData@main/MyCMake/CPM/CPM_3b40429.cmake
+        "${CMAKE_CURRENT_LIST_DIR}/CPM.cmake"
+        SHA256 438E319D455FD96E18F6CAD9DF596FCD5C9CA3590B1B2EDFA01AF7809CD7BEC7
+)
+SET(CPM_USE_LOCAL_PACKAGES TRUE CACHE BOOL "" FORCE)
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/CPM.cmake")
+
 # ---------------------------------------------------------
 
 MACRO(INIT_PROJECT)
