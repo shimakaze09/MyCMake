@@ -85,7 +85,7 @@ FUNCTION(ADD_TARGET)
     CMAKE_PARSE_ARGUMENTS(
             "ARG"
             "TEST;QT;NOT_GROUP"
-            "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME"
+            "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME;CXX_STANDARD"
             "${ARG_LIST}"
             ${ARGN}
     )
@@ -129,6 +129,7 @@ FUNCTION(ADD_TARGET)
     # MODE: EXE / STATIC / SHARED / INTERFACE
     # ADD_CURRENT_TO: PUBLIC / INTERFACE / PRIVATE (default) / NONE
     # RET_TARGET_NAME
+    # CXX_STANDARD: 11/14/17/20, default is global CXX_STANDARD (20)
     # [list] : public, interface, private
     # SOURCE: dir(recursive), file, auto add current dir | target_sources
     # INC: dir                                           | target_include_directories
@@ -280,6 +281,11 @@ FUNCTION(ADD_TARGET)
     ELSE ()
         MESSAGE(FATAL_ERROR "Mode [${ARG_MODE}] is not supported")
         RETURN()
+    ENDIF ()
+
+    IF (NOT "${ARG_CXX_STANDARD}" STREQUAL "")
+        SET_PROPERTY(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD ${ARG_CXX_STANDARD})
+        MESSAGE(STATUS "- CXX_STANDARD : ${ARG_CXX_STANDARD}")
     ENDIF ()
 
     # Folder
