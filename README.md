@@ -457,3 +457,7 @@ MESSAGE(STATUS/WARNING/FATAL_ERROR "str")
             DESTINATION "${PROJECT_NAME}/cmake"
     )
     ```
+
+## Working with Visual Studio
+
+- cmake -G "Visual Studio 16 2019" -A x64 -S ./ -B ./build

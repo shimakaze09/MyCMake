@@ -26,9 +26,27 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/CPM.cmake")
 # ---------------------------------------------------------
 
 MACRO(INIT_PROJECT)
+    CMAKE_PARSE_ARGUMENTS(
+            "ARG" # prefix
+            "" #<options> # TRUE / FALSE
+            "CXX_STANDARD" # <one_value_keywords>
+            "" #<multi_value_keywords> # list
+            ${ARGN}
+    )
+    # The results are in ARG_*
+    # - ARG_<option>
+    # - ARG_<one_value_keyword>
+    # - ARG_<multi_value_keyword>
+
     SET(CMAKE_DEBUG_POSTFIX d)
 
-    SET(CMAKE_CXX_STANDARD 17)
+    IF ("${ARG_CXX_STANDARD}" STREQUAL "")
+        SET(ARG_CXX_STANDARD 20)
+    ENDIF ()
+
+    MESSAGE(STATUS "CXX_STANDARD: ${ARG_CXX_STANDARD}")
+
+    SET(CMAKE_CXX_STANDARD ${ARG_CXX_STANDARD})
     SET(CMAKE_CXX_STANDARD_REQUIRED True)
 
     IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
