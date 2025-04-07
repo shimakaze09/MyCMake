@@ -26,22 +26,33 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/CPM.cmake")
 # ---------------------------------------------------------
 
 MACRO(INIT_PROJECT)
-    CMAKE_PARSE_ARGUMENTS(
-            "ARG" # prefix
-            "" #<options> # TRUE / FALSE
-            "CXX_STANDARD" # <one_value_keywords>
-            "" #<multi_value_keywords> # list
-            ${ARGN}
-    )
-    # The results are in ARG_*
-    # - ARG_<option>
-    # - ARG_<one_value_keyword>
-    # - ARG_<multi_value_keyword>
-
     SET(CMAKE_DEBUG_POSTFIX d)
 
     IF ("${ARG_CXX_STANDARD}" STREQUAL "")
         SET(ARG_CXX_STANDARD 20)
+    ENDIF ()
+
+    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        # using Clang
+        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11")
+            MESSAGE(FATAL_ERROR "clang (< 11) not support concept")
+            RETURN()
+        ENDIF ()
+        MESSAGE(STATUS "Compiler: Clang ${CMAKE_CXX_COMPILER_VERSION}")
+    ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10")
+            MESSAGE(FATAL_ERROR "gcc (< 10) not support concept")
+            RETURN()
+        ENDIF ()
+        MESSAGE(STATUS "Compiler: GCC ${CMAKE_CXX_COMPILER_VERSION}")
+        # using GCC
+    ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        # using Visual Studio C++
+        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.26")
+            MESSAGE(FATAL_ERROR "MSVC (< 1926 / 2019 16.6) not support concept")
+            RETURN()
+        ENDIF ()
+        MESSAGE(STATUS "Compiler: MSVC ${CMAKE_CXX_COMPILER_VERSION}")
     ENDIF ()
 
     MESSAGE(STATUS "CXX_STANDARD: ${ARG_CXX_STANDARD}")
