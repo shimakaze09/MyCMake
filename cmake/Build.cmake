@@ -77,15 +77,15 @@ FUNCTION(ADD_TARGET)
 
     SET(ARG_LIST "")
     # public
-    LIST(APPEND ARG_LIST SOURCE_PUBLIC INC LIB DEFINE C_OPTION L_OPTION)
+    LIST(APPEND ARG_LIST SOURCE_PUBLIC INC LIB DEFINE C_OPTION L_OPTION PCH_PUBLIC)
     # interface
     LIST(APPEND ARG_LIST SOURCE_INTERFACE INC_INTERFACE LIB_INTERFACE DEFINE_INTERFACE C_OPTION_INTERFACE L_OPTION_INTERFACE)
     # private
-    LIST(APPEND ARG_LIST SOURCE INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE)
+    LIST(APPEND ARG_LIST SOURCE INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE PCH)
     CMAKE_PARSE_ARGUMENTS(
             "ARG"
             "TEST;QT;NOT_GROUP"
-            "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME;CXX_STANDARD"
+            "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME;CXX_STANDARD;PCH_REUSE_FROM"
             "${ARG_LIST}"
             ${ARGN}
     )
@@ -103,6 +103,7 @@ FUNCTION(ADD_TARGET)
         LIST(APPEND ARG_DEFINE_INTERFACE ${ARG_DEFINE} ${ARG_DEFINE_PRIVATE})
         LIST(APPEND ARG_C_OPTION_INTERFACE ${ARG_C_OPTION} ${ARG_C_OPTION_PRIVATE})
         LIST(APPEND ARG_L_OPTION_INTERFACE ${ARG_L_OPTION} ${ARG_L_OPTION_PRIVATE})
+        LIST(APPEND ARG_PCH_INTERFACE ${ARG_PCH_PUBLIC} ${ARG_PCH})
         SET(ARG_SOURCE_PUBLIC "")
         SET(ARG_SOURCE "")
         SET(ARG_INC "")
@@ -115,6 +116,8 @@ FUNCTION(ADD_TARGET)
         SET(ARG_C_OPTION_PRIVATE "")
         SET(ARG_L_OPTION "")
         SET(ARG_L_OPTION_PRIVATE "")
+        SET(ARG_PCH_PUBLIC "")
+        SET(ARG_PCH "")
 
         IF (NOT "${ARG_ADD_CURRENT_TO}" STREQUAL "NONE")
             SET(ARG_ADD_CURRENT_TO "INTERFACE")
@@ -130,6 +133,7 @@ FUNCTION(ADD_TARGET)
     # ADD_CURRENT_TO: PUBLIC / INTERFACE / PRIVATE (default) / NONE
     # RET_TARGET_NAME
     # CXX_STANDARD: 11/14/17/20, default is global CXX_STANDARD (20)
+    # PCH_REUSE_FROM
     # [list] : public, interface, private
     # SOURCE: dir(recursive), file, auto add current dir | target_sources
     # INC: dir                                           | target_include_directories
@@ -137,6 +141,7 @@ FUNCTION(ADD_TARGET)
     # DEFINE: #define ...                                | target_compile_definitions
     # C_OPTION: compile options                          | target_compile_options
     # L_OPTION: link options                             | target_link_options
+    # PCH: precompile headers                            | target_precompile_headers
 
     # Test
     IF (ARG_TEST AND NOT "${BUILD_TEST_${PROJECT_NAME}}")
@@ -373,8 +378,19 @@ FUNCTION(ADD_TARGET)
             PRIVATE ${ARG_L_OPTION_PRIVATE}
     )
 
+    # target pch
+    TARGET_PRECOMPILE_HEADERS(${TARGET_NAME}
+            PUBLIC ${ARG_PCH_PUBLIC}
+            INTERFACE ${ARG_PCH_INTERFACE}
+            PRIVATE ${ARG_PCH}
+    )
+
     IF (NOT "${ARG_OUTPUT_NAME}" STREQUAL "")
         SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${ARG_OUTPUT_NAME}" CLEAN_DIRECT_OUTPUT 1)
+    ENDIF ()
+
+    IF (NOT "${ARG_PCH_REUSE_FROM}" STREQUAL "")
+        TARGET_PRECOMPILE_HEADERS(${TARGET_NAME} REUSE_FROM "${ARG_PCH_REUSE_FROM}")
     ENDIF ()
 
     IF (NOT ARG_TEST)
