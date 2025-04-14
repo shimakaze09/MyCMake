@@ -53,6 +53,8 @@ MACRO(INIT_PROJECT)
             MESSAGE(FATAL_ERROR "MSVC (< 1926 / 2019 16.6) not support concept")
             RETURN()
         ENDIF ()
+    ELSE ()
+        MESSAGE(WARNING "Unknown CMAKE_CXX_COMPILER_ID : ${CMAKE_CXX_COMPILER_ID}")
     ENDIF ()
 
     MESSAGE(STATUS "CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
