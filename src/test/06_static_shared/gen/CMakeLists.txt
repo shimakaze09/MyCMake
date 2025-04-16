@@ -1,0 +1,4 @@
+ADD_TARGET(
+        TEST
+        MODE STATIC_AND_SHARED
+)

@@ -15,7 +15,7 @@ FUNCTION(ADD_SUB_DIRS_REC PATH)
 ENDFUNCTION()
 
 FUNCTION(GET_TARGET_NAME RST TARGET_PATH)
-    FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${TARGET_PATH}")
+    FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/SRC" "${TARGET_PATH}")
     STRING(REPLACE "/" "_" TARGET_NAME "${PROJECT_NAME}_${TARGET_REL_PATH}")
     SET(${RST} ${TARGET_NAME} PARENT_SCOPE)
 ENDFUNCTION()
@@ -25,41 +25,41 @@ FUNCTION(EXPAND_SOURCES RST SOURCES)
     FOREACH (ITEM ${${SOURCES}})
         IF (IS_DIRECTORY ${ITEM})
             FILE(GLOB_RECURSE ITEM_SRCS
-                    # CMake
-                    ${ITEM}/*.cmake
+                # CMake
+                ${ITEM}/*.cmake
 
-                    # msvc
-                    ${ITEM}/*.natvis
+                # msvc
+                ${ITEM}/*.natvis
 
-                    # INTERFACE files
-                    ${ITEM}/*.h
-                    ${ITEM}/*.hpp
-                    ${ITEM}/*.hxx
-                    ${ITEM}/*.inl
+                # INTERFACE files
+                ${ITEM}/*.h
+                ${ITEM}/*.hpp
+                ${ITEM}/*.hxx
+                ${ITEM}/*.inl
 
-                    # Source files
-                    ${ITEM}/*.c
+                # Source files
+                ${ITEM}/*.c
 
-                    ${ITEM}/*.cc
-                    ${ITEM}/*.cpp
-                    ${ITEM}/*.cxx
+                ${ITEM}/*.cc
+                ${ITEM}/*.cpp
+                ${ITEM}/*.cxx
 
-                    # Shader files
-                    ${ITEM}/*.vert # glsl vertex shader
-                    ${ITEM}/*.tesc # glsl tessellation control shader
-                    ${ITEM}/*.tese # glsl tessellation evaluation shader
-                    ${ITEM}/*.geom # glsl geometry shader
-                    ${ITEM}/*.frag # glsl fragment shader
-                    ${ITEM}/*.comp # glsl compute shader
+                # Shader files
+                ${ITEM}/*.vert # glsl vertex shader
+                ${ITEM}/*.tesc # glsl tessellation control shader
+                ${ITEM}/*.tese # glsl tessellation evaluation shader
+                ${ITEM}/*.geom # glsl geometry shader
+                ${ITEM}/*.frag # glsl fragment shader
+                ${ITEM}/*.comp # glsl compute shader
 
-                    # ${ITEM}/*.hlsl
-                    # ${ITEM}/*.hlsli
-                    # ${ITEM}/*.fx
-                    # ${ITEM}/*.fxh
+                # ${ITEM}/*.hlsl
+                # ${ITEM}/*.hlsli
+                # ${ITEM}/*.fx
+                # ${ITEM}/*.fxh
 
-                    # QT files
-                    ${ITEM}/*.qrc
-                    ${ITEM}/*.ui
+                # QT files
+                ${ITEM}/*.qrc
+                ${ITEM}/*.ui
             )
             LIST(APPEND TMP_RST ${ITEM_SRCS})
         ELSE ()
@@ -83,11 +83,11 @@ FUNCTION(ADD_TARGET)
     # private
     LIST(APPEND ARG_LIST SOURCE INC_PRIVATE LIB_PRIVATE DEFINE_PRIVATE C_OPTION_PRIVATE L_OPTION_PRIVATE PCH)
     CMAKE_PARSE_ARGUMENTS(
-            "ARG"
-            "TEST;QT;NOT_GROUP"
-            "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME;CXX_STANDARD;PCH_REUSE_FROM"
-            "${ARG_LIST}"
-            ${ARGN}
+        "ARG"
+        "TEST;QT;NOT_GROUP"
+        "MODE;ADD_CURRENT_TO;OUTPUT_NAME;RET_TARGET_NAME;CXX_STANDARD;PCH_REUSE_FROM"
+        "${ARG_LIST}"
+        ${ARGN}
     )
 
     # default
@@ -129,7 +129,7 @@ FUNCTION(ADD_TARGET)
     # QT
     # NOT_GROUP
     # [value]
-    # MODE: EXE / STATIC / SHARED / INTERFACE
+    # MODE: EXE / STATIC / SHARED / INTERFACE / STATIC_AND_SHARED
     # ADD_CURRENT_TO: PUBLIC / INTERFACE / PRIVATE (default) / NONE
     # RET_TARGET_NAME
     # CXX_STANDARD: 11/14/17/20, default is global CXX_STANDARD (20)
@@ -138,7 +138,7 @@ FUNCTION(ADD_TARGET)
     # SOURCE: dir(recursive), file, auto add current dir | target_sources
     # INC: dir                                           | target_include_directories
     # LIB: <lib-target>, *.lib                           | target_link_libraries
-    # DEFINE: #define ...                                | target_compile_definitions
+    # DEFINE: #define ...                                | TARGET_COMPILE_DEFINITIONS
     # C_OPTION: compile options                          | target_compile_options
     # L_OPTION: link options                             | target_link_options
     # PCH: precompile headers                            | target_precompile_headers
@@ -188,235 +188,252 @@ FUNCTION(ADD_TARGET)
     ENDIF ()
 
     # Target folder
-    FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    FILE(RELATIVE_PATH TARGET_REL_PATH "${PROJECT_SOURCE_DIR}/SRC" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     SET(TARGET_FOLDER "${PROJECT_NAME}/${TARGET_REL_PATH}")
 
-    GET_TARGET_NAME(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR})
+    GET_TARGET_NAME(CORE_TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR})
     IF (NOT "${ARG_RET_TARGET_NAME}" STREQUAL "")
-        SET(${ARG_RET_TARGET_NAME} ${TARGET_NAME} PARENT_SCOPE)
+        SET(${ARG_RET_TARGET_NAME} ${CORE_TARGET_NAME} PARENT_SCOPE)
     ENDIF ()
 
     # Print
-    MESSAGE(STATUS "- Name: ${TARGET_NAME}")
+    MESSAGE(STATUS "- Name: ${CORE_TARGET_NAME}")
     MESSAGE(STATUS "- Folder : ${TARGET_FOLDER}")
     MESSAGE(STATUS "- Mode: ${ARG_MODE}")
     LIST_PRINT(STRS ${SOURCES_PRIVATE}
-            TITLE "- Sources (private):"
-            PREFIX "  * ")
+        TITLE "- Sources (private):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${SOURCES_INTERFACE}
-            TITLE "- Sources interface:"
-            PREFIX "  * ")
+        TITLE "- Sources interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${SOURCES_PUBLIC}
-            TITLE "- Sources public:"
-            PREFIX "  * ")
+        TITLE "- Sources public:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE}
-            TITLE "- Define (public):"
-            PREFIX "  * ")
+        TITLE "- Define (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_PRIVATE}
-            TITLE "- Define interface:"
-            PREFIX "  * ")
+        TITLE "- Define interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
-            TITLE "- Define private:"
-            PREFIX "  * ")
+        TITLE "- Define private:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB}
-            TITLE "- Lib (public):"
-            PREFIX "  * ")
+        TITLE "- Lib (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB_INTERFACE}
-            TITLE "- Lib interface:"
-            PREFIX "  * ")
+        TITLE "- Lib interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_LIB_PRIVATE}
-            TITLE "- Lib private:"
-            PREFIX "  * ")
+        TITLE "- Lib private:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC}
-            TITLE "- Inc (public):"
-            PREFIX "  * ")
+        TITLE "- Inc (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC_INTERFACE}
-            TITLE "- Inc interface:"
-            PREFIX "  * ")
+        TITLE "- Inc interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_INC_PRIVATE}
-            TITLE "- Inc private:"
-            PREFIX "  * ")
+        TITLE "- Inc private:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE}
-            TITLE "- Define (public):"
-            PREFIX "  * ")
+        TITLE "- Define (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_INTERFACE}
-            TITLE "- Define interface:"
-            PREFIX "  * ")
+        TITLE "- Define interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_DEFINE_PRIVATE}
-            TITLE "- Define private:"
-            PREFIX "  * ")
+        TITLE "- Define private:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION}
-            TITLE "- Compile option (public):"
-            PREFIX "  * ")
+        TITLE "- Compile option (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION_INTERFACE}
-            TITLE "- Compile option interface:"
-            PREFIX "  * ")
+        TITLE "- Compile option interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_C_OPTION_PRIVATE}
-            TITLE "- Compile option private:"
-            PREFIX "  * ")
+        TITLE "- Compile option private:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION}
-            TITLE "- Link option (public):"
-            PREFIX "  * ")
+        TITLE "- Link option (public):"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION_INTERFACE}
-            TITLE "- Link option interface:"
-            PREFIX "  * ")
+        TITLE "- Link option interface:"
+        PREFIX "  * ")
     LIST_PRINT(STRS ${ARG_L_OPTION_PRIVATE}
-            TITLE "- Link option private:"
-            PREFIX "  * ")
+        TITLE "- Link option private:"
+        PREFIX "  * ")
 
     PACKAGE_NAME(PACKAGE_NAME)
 
+    SET(TARGET_NAMES "")
+
     # Add target
     IF ("${ARG_MODE}" STREQUAL "EXE")
-        ADD_EXECUTABLE(${TARGET_NAME})
-        ADD_EXECUTABLE("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        ADD_EXECUTABLE(${CORE_TARGET_NAME})
+        ADD_EXECUTABLE("My::${CORE_TARGET_NAME}" ALIAS ${CORE_TARGET_NAME})
         IF (MSVC)
-            SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${ROOT_PROJECT_PATH}/bin")
+            SET_TARGET_PROPERTIES(${CORE_TARGET_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${ROOT_PROJECT_PATH}/bin")
         ENDIF ()
-        SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-        SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES MINSIZEREL_POSTFIX ${CMAKE_MINSIZEREL_POSTFIX})
-        SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX ${CMAKE_RELWITHDEBINFO_POSTFIX})
+        SET_TARGET_PROPERTIES(${CORE_TARGET_NAME} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+        SET_TARGET_PROPERTIES(${CORE_TARGET_NAME} PROPERTIES MINSIZEREL_POSTFIX ${CMAKE_MINSIZEREL_POSTFIX})
+        SET_TARGET_PROPERTIES(${CORE_TARGET_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX ${CMAKE_RELWITHDEBINFO_POSTFIX})
+        LIST(APPEND TARGET_NAMES ${CORE_TARGET_NAME})
     ELSEIF ("${ARG_MODE}" STREQUAL "STATIC")
-        ADD_LIBRARY(${TARGET_NAME} STATIC)
-        ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        ADD_LIBRARY(${CORE_TARGET_NAME} STATIC)
+        ADD_LIBRARY("My::${CORE_TARGET_NAME}" ALIAS ${CORE_TARGET_NAME})
+        LIST(APPEND TARGET_NAMES ${CORE_TARGET_NAME})
     ELSEIF ("${ARG_MODE}" STREQUAL "SHARED")
-        ADD_LIBRARY(${TARGET_NAME} SHARED)
-        ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        ADD_LIBRARY(${CORE_TARGET_NAME} SHARED)
+        ADD_LIBRARY("My::${CORE_TARGET_NAME}" ALIAS ${CORE_TARGET_NAME})
+        TARGET_COMPILE_DEFINITIONS(${CORE_TARGET_NAME} PRIVATE ${CORE_TARGET_NAME}_EXPORTS)
+        LIST(APPEND TARGET_NAMES ${CORE_TARGET_NAME})
     ELSEIF ("${ARG_MODE}" STREQUAL "INTERFACE")
-        ADD_LIBRARY(${TARGET_NAME} INTERFACE)
-        ADD_LIBRARY("My::${TARGET_NAME}" ALIAS ${TARGET_NAME})
+        ADD_LIBRARY(${CORE_TARGET_NAME} INTERFACE)
+        ADD_LIBRARY("My::${CORE_TARGET_NAME}" ALIAS ${CORE_TARGET_NAME})
+        LIST(APPEND TARGET_NAMES ${CORE_TARGET_NAME})
+    ELSEIF("${ARG_MODE}" STREQUAL "STATIC_AND_SHARED")
+        ADD_LIBRARY(${CORE_TARGET_NAME}_static STATIC)
+        ADD_LIBRARY("My::${CORE_TARGET_NAME}_static" ALIAS ${CORE_TARGET_NAME}_static)
+        ADD_LIBRARY(${CORE_TARGET_NAME}_shared SHARED)
+        ADD_LIBRARY("My::${CORE_TARGET_NAME}_shared" ALIAS ${CORE_TARGET_NAME}_shared)
+        TARGET_COMPILE_DEFINITIONS(${CORE_TARGET_NAME}_static PUBLIC ${CORE_TARGET_NAME}_STATIC)
+        TARGET_COMPILE_DEFINITIONS(${CORE_TARGET_NAME}_shared PRIVATE ${CORE_TARGET_NAME}_EXPORTS)
+        LIST(APPEND TARGET_NAMES ${CORE_TARGET_NAME}_static ${CORE_TARGET_NAME}_shared)
     ELSE ()
         MESSAGE(FATAL_ERROR "Mode [${ARG_MODE}] is not supported")
         RETURN()
     ENDIF ()
 
-    TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE
+    FOREACH(TARGET_NAME ${TARGET_NAMES})
+        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE
             $<$<CONFIG:Debug>:MYCMAKE_CONFIG_DEBUG>
             $<$<CONFIG:Release>:MYCMAKE_CONFIG_RELEASE>
             $<$<CONFIG:MinSizeRel>:MYCMAKE_CONFIG_MINSIZEREL>
             $<$<CONFIG:RelWithDebInfo>:MYCMAKE_CONFIG_RELWITHDEBINFO>
-    )
-    TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE
+        )
+        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE
             $<$<CONFIG:Debug>:MYCMAKE_CONFIG_POSTFIX="${CMAKE_DEBUG_POSTFIX}">
             $<$<CONFIG:Release>:MYCMAKE_CONFIG_POSTFIX="">
             $<$<CONFIG:MinSizeRel>:MYCMAKE_CONFIG_POSTFIX="${CMAKE_MINSIZEREL_POSTFIX}">
             $<$<CONFIG:RelWithDebInfo>:MYCMAKE_CONFIG_POSTFIX="${CMAKE_RELWITHDEBINFO_POSTFIX}">
-    )
-    TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE MYCMAKE_TARGET_NAME=${TARGET_NAME})
+        )
+        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME} PRIVATE MYCMAKE_TARGET_NAME=${TARGET_NAME})
 
-    IF (NOT "${ARG_CXX_STANDARD}" STREQUAL "")
-        SET_PROPERTY(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD ${ARG_CXX_STANDARD})
-        MESSAGE(STATUS "- CXX_STANDARD : ${ARG_CXX_STANDARD}")
-    ENDIF ()
+        IF (NOT "${ARG_CXX_STANDARD}" STREQUAL "")
+            SET_PROPERTY(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD ${ARG_CXX_STANDARD})
+            MESSAGE(STATUS "- CXX_STANDARD : ${ARG_CXX_STANDARD}")
+        ENDIF ()
 
-    # Folder
-    IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
-        SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES FOLDER ${TARGET_FOLDER})
-    ENDIF ()
+        # Folder
+        IF (NOT ${ARG_MODE} STREQUAL "INTERFACE")
+            SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES FOLDER ${TARGET_FOLDER})
+        ENDIF ()
 
-    # Target sources
-    FOREACH (SRC ${SOURCES_PUBLIC})
-        GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
-        TARGET_SOURCES(${TARGET_NAME} PUBLIC
+        # Target sources
+        FOREACH(SRC ${SOURCES_PUBLIC})
+            GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
+            TARGET_SOURCES(${TARGET_NAME} PUBLIC
                 $<BUILD_INTERFACE:${ABS_SRC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_SRC}>
-        )
-    ENDFOREACH ()
-    FOREACH (SRC ${SOURCES_PRIVATE})
-        GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
-        TARGET_SOURCES(${TARGET_NAME} PRIVATE
+            )
+        ENDFOREACH()
+        FOREACH(SRC ${SOURCES_PRIVATE})
+            GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
+            TARGET_SOURCES(${TARGET_NAME} PRIVATE
                 $<BUILD_INTERFACE:${ABS_SRC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_SRC}>
-        )
-    ENDFOREACH ()
-    FOREACH (SRC ${SOURCES_INTERFACE})
-        GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
-        TARGET_SOURCES(${TARGET_NAME} INTERFACE
+            )
+        ENDFOREACH()
+        FOREACH(SRC ${SOURCES_INTERFACE})
+            GET_FILENAME_COMPONENT(ABS_SRC ${SRC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_SRC ${PROJECT_SOURCE_DIR} ${ABS_SRC})
+            TARGET_SOURCES(${TARGET_NAME} INTERFACE
                 $<BUILD_INTERFACE:${ABS_SRC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_SRC}>
-        )
-    ENDFOREACH ()
+            )
+        ENDFOREACH()
 
-    # Target define
-    TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
+        # Target define
+        TARGET_COMPILE_DEFINITIONS(${TARGET_NAME}
             PUBLIC ${ARG_DEFINE}
             INTERFACE ${ARG_DEFINE_INTERFACE}
             PRIVATE ${ARG_DEFINE_PRIVATE}
-    )
+        )
 
-    # Target lib
-    TARGET_LINK_LIBRARIES(${TARGET_NAME}
+        # Target lib
+        TARGET_LINK_LIBRARIES(${TARGET_NAME}
             PUBLIC ${ARG_LIB}
             INTERFACE ${ARG_LIB_INTERFACE}
             PRIVATE ${ARG_LIB_PRIVATE}
-    )
+        )
 
-    # Target inc
-    FOREACH (INC ${ARG_INC})
-        GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${ABS_INC})
-        TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
+        # Target inc
+        FOREACH(INC ${ARG_INC})
+            GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${ABS_INC})
+            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
                 $<BUILD_INTERFACE:${ABS_INC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
-        )
-    ENDFOREACH ()
-    FOREACH (INC ${ARG_INC_PRIVATE})
-        GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${ABS_INC})
-        TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
+            )
+        ENDFOREACH()
+        FOREACH(INC ${ARG_INC_PRIVATE})
+            GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${ABS_INC})
+            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
                 $<BUILD_INTERFACE:${ABS_INC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
-        )
-    ENDFOREACH ()
-    FOREACH (INC ${ARG_INC_INTERFACE})
-        GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
-        FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${INC})
-        TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
+            )
+        ENDFOREACH()
+        FOREACH(INC ${ARG_INC_INTERFACE})
+            GET_FILENAME_COMPONENT(ABS_INC ${INC} ABSOLUTE)
+            FILE(RELATIVE_PATH REL_INC ${PROJECT_SOURCE_DIR} ${INC})
+            TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE
                 $<BUILD_INTERFACE:${ABS_INC}>
                 $<INSTALL_INTERFACE:${PACKAGE_NAME}/${REL_INC}>
-        )
-    ENDFOREACH ()
+            )
+        ENDFOREACH()
 
-    # Target compile option
-    TARGET_COMPILE_OPTIONS(${TARGET_NAME}
+        # Target compile option
+        TARGET_COMPILE_OPTIONS(${TARGET_NAME}
             PUBLIC ${ARG_C_OPTION}
             INTERFACE ${ARG_C_OPTION_INTERFACE}
             PRIVATE ${ARG_C_OPTION_PRIVATE}
-    )
+        )
 
-    # Target link option
-    TARGET_LINK_OPTIONS(${TARGET_NAME}
+        # Target link option
+        TARGET_LINK_OPTIONS(${TARGET_NAME}
             PUBLIC ${ARG_L_OPTION}
             INTERFACE ${ARG_L_OPTION_INTERFACE}
             PRIVATE ${ARG_L_OPTION_PRIVATE}
-    )
+        )
 
-    # target pch
-    TARGET_PRECOMPILE_HEADERS(${TARGET_NAME}
+        # Target pch
+        TARGET_PRECOMPILE_HEADERS(${TARGET_NAME}
             PUBLIC ${ARG_PCH_PUBLIC}
             INTERFACE ${ARG_PCH_INTERFACE}
             PRIVATE ${ARG_PCH}
-    )
+        )
 
-    IF (NOT "${ARG_OUTPUT_NAME}" STREQUAL "")
-        SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${ARG_OUTPUT_NAME}" CLEAN_DIRECT_OUTPUT 1)
-    ENDIF ()
+        IF (NOT "${ARG_OUTPUT_NAME}" STREQUAL "")
+            SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${ARG_OUTPUT_NAME}" CLEAN_DIRECT_OUTPUT 1)
+        ENDIF ()
 
-    IF (NOT "${ARG_PCH_REUSE_FROM}" STREQUAL "")
-        TARGET_PRECOMPILE_HEADERS(${TARGET_NAME} REUSE_FROM "${ARG_PCH_REUSE_FROM}")
-    ENDIF ()
+        IF (NOT "${ARG_PCH_REUSE_FROM}" STREQUAL "")
+            TARGET_PRECOMPILE_HEADERS(${TARGET_NAME} REUSE_FROM "${ARG_PCH_REUSE_FROM}")
+        ENDIF ()
 
-    IF (NOT ARG_TEST)
-        INSTALL(TARGETS ${TARGET_NAME}
+        IF (NOT ARG_TEST)
+            INSTALL(TARGETS ${TARGET_NAME}
                 EXPORT "${PROJECT_NAME}Targets"
                 RUNTIME DESTINATION "bin"
                 ARCHIVE DESTINATION "${PACKAGE_NAME}/lib"
                 LIBRARY DESTINATION "${PACKAGE_NAME}/lib"
-        )
-    ENDIF ()
+            )
+        ENDIF ()
+    ENDFOREACH()
 
     IF (ARG_QT)
         QT_END()
