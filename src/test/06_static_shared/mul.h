@@ -1,6 +1,6 @@
 #if (defined(WIN32) || defined(_WIN32)) && \
-    !defined(MyCMake_test_06_static_shared_gen_STATIC)
-#ifdef MyCMake_test_06_static_shared_gen_EXPORTS
+    !defined(MYCMAKE_STATIC_MyCMake_test_06_static_shared_gen)
+#ifdef MYCMAKE_EXPORT_MyCMake_test_06_static_shared_gen
 #define MyCMake_test_06_static_shared_gen_API __declspec(dllexport)
 #else
 #define MyCMake_test_06_static_shared_gen_API __declspec(dllimport)
@@ -8,7 +8,7 @@
 #else
 #define MyCMake_test_06_static_shared_gen_API extern
 #endif  // (defined(WIN32) || defined(_WIN32)) &&
-        // !defined(MyCMake_test_04_dll_STATIC)
+        // !defined(MYCMAKE_STATIC_MyCMake_test_06_static_shared_gen)
 
 #ifdef __cplusplus
 extern "C" {

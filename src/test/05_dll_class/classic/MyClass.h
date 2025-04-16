@@ -1,6 +1,6 @@
 #if (defined(WIN32) || defined(_WIN32)) && \
-    !defined(MyCMake_test_05_dll_class_classic_gen_STATIC)
-#ifdef MyCMake_test_05_dll_class_classic_gen_EXPORTS
+    !defined(MyCMAKE_STATIC_MyCMake_test_05_dll_class_classic_gen)
+#ifdef MYCMAKE_EXPORT_MyCMake_test_05_dll_class_classic_gen
 #define MyCMake_test_05_dll_class_classic_gen_API __declspec(dllexport)
 #define MyCMake_test_05_dll_class_classic_gen_CLASS_API __declspec(dllexport)
 #else
@@ -10,7 +10,7 @@
 #else
 #define MyCMake_test_05_dll_class_classic_gen_API extern
 #define MyCMake_test_05_dll_class_classic_gen_CLASS_API
-#endif  // (defined(WIN32) || defined(_WIN32)) && !defined(MyCMake_test_05_dll_class_classic_gen_STATIC)
+#endif  // (defined(WIN32) || defined(_WIN32)) && !defined(MYCMAKE_STATIC_MyCMake_test_05_dll_class_classic_gen)
 
 #include <stddef.h>
 
