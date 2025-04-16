@@ -15,4 +15,4 @@ ADD_TARGET(
         ${LIBS}
 )
 
-ADD_DEPENDENCIES(${tname} MyCMake_test_04_dll_gen)
+ADD_DEPENDENCIES(${tname} MyCMake_test_05_dll_class_classic_gen)

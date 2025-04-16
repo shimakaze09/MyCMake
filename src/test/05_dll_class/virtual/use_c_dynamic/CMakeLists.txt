@@ -2,9 +2,9 @@ SET(LIBS "")
 IF (MSVC)
     #
 ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  LIST(APPEND LIBS "dl")
+    LIST(APPEND LIBS "dl")
 ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  LIST(APPEND LIBS "dl")
+    LIST(APPEND LIBS "dl")
 ENDIF ()
 
 ADD_TARGET(
@@ -15,4 +15,4 @@ ADD_TARGET(
         ${LIBS}
 )
 
-ADD_DEPENDENCIES(${tname} MyCMake_test_04_dll_gen)
+ADD_DEPENDENCIES(${tname} MyCMake_test_05_dll_class_virtual_gen)

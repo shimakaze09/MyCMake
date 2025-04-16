@@ -15,7 +15,8 @@ typedef int (*Func)(int, int);
 int main() {
   Func mul;
 #if defined(_WIN32) || defined(_WIN64)
-  const char dllname[] = "MyCMake_test_04_dll_gen" MYCMAKE_CONFIG_POSTFIX ".dll";
+  const char dllname[] =
+      "MyCMake_test_04_dll_gen" MYCMAKE_CONFIG_POSTFIX ".dll";
 
   HMODULE dll = LoadLibrary(dllname);
   if (!dll) {
@@ -24,7 +25,10 @@ int main() {
   }
   mul = (Func)GetProcAddress(dll, "mul");
 #else
-  const char soname[] = "MyCMake_test_04_dll_gen" MYCMAKE_CONFIG_POSTFIX ".so";
+  const char soname[] =
+      "./"
+      "lib"
+      "MyCMake_test_04_dll_gen" MYCMAKE_CONFIG_POSTFIX ".so";
   void* so = dlopen(soname, RTLD_LAZY);
   if (!so) {
     printf("load %s failed.", soname);
