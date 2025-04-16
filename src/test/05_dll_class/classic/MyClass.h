@@ -2,11 +2,14 @@
     !defined(MyCMake_test_05_dll_class_classic_gen_STATIC)
 #ifdef MyCMake_test_05_dll_class_classic_gen_EXPORTS
 #define MyCMake_test_05_dll_class_classic_gen_API __declspec(dllexport)
+#define MyCMake_test_05_dll_class_classic_gen_CLASS_API __declspec(dllexport)
 #else
 #define MyCMake_test_05_dll_class_classic_gen_API __declspec(dllimport)
+#define MyCMake_test_05_dll_class_classic_gen_CLASS_API __declspec(dllimport)
 #endif
 #else
 #define MyCMake_test_05_dll_class_classic_gen_API extern
+#define MyCMake_test_05_dll_class_classic_gen_CLASS_API
 #endif  // (defined(WIN32) || defined(_WIN32)) && !defined(MyCMake_test_05_dll_class_classic_gen_STATIC)
 
 #include <stddef.h>
@@ -14,7 +17,7 @@
 #ifdef __cplusplus
 #include <type_traits>
 
-class MyCMake_test_05_dll_class_classic_gen_API MyClass {
+class MyCMake_test_05_dll_class_classic_gen_CLASS_API MyClass {
  public:
   int x;
   int y;

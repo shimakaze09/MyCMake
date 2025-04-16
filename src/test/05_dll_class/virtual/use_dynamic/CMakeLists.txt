@@ -1,18 +1,18 @@
-SET(LIBS "")
-IF (MSVC)
-    #
-ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    LIST(APPEND LIBS "dl")
-ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    LIST(APPEND LIBS "dl")
-ENDIF ()
+set(libs "")
+if(MSVC)
+  #
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  list(APPEND libs "dl")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  list(APPEND libs "dl")
+endif()
 
 ADD_TARGET(
         TEST
         RET_TARGET_NAME tname
         MODE EXE
         LIB_PRIVATE
-        ${LIBS}
+        ${libs}
 )
 
-ADD_DEPENDENCIES(${tname} MyCMake_test_05_dll_class_virtual_gen)
+add_dependencies(${tname} MyCMake_test_05_dll_class_virtual_gen)
