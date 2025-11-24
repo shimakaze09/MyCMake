@@ -1,10 +1,8 @@
 SET(LIBS "")
-IF(MSVC)
-    #
-ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+IF(UNIX)
     LIST(APPEND LIBS "dl")
-ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    LIST(APPEND LIBS "dl")
+ELSEIF (WIN32)
+    # On Windows, no additional libraries are needed for dynamic loading
 ENDIF ()
 
 ADD_TARGET(
