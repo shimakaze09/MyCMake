@@ -1,22 +1,49 @@
 MESSAGE(STATUS "Include Build.cmake")
 
 FUNCTION(ADD_SUB_DIRS_REC PATH)
-    FILE(GLOB_RECURSE CHILDREN LIST_DIRECTORIES true ${CMAKE_CURRENT_SOURCE_DIR}/${PATH}/*)
+    # Find all CMakeLists.txt files in subdirectories
+    FILE(GLOB_RECURSE CMAKE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/${PATH}/*/CMakeLists.txt")
+    
     SET(DIRS "")
-    LIST(APPEND CHILDREN "${CMAKE_CURRENT_SOURCE_DIR}/${PATH}")
-    FOREACH (ITEM ${CHILDREN})
-        IF (IS_DIRECTORY ${ITEM} AND EXISTS "${ITEM}/CMakeLists.txt")
-            # Ignore hidden directories (like .git, .vs)
-            STRING(FIND "${ITEM}" "/." IDX_DOT)
+    FOREACH(FILE_PATH ${CMAKE_FILES})
+        GET_FILENAME_COMPONENT(DIR_PATH ${FILE_PATH} DIRECTORY)
+        LIST(APPEND DIRS ${DIR_PATH})
+    ENDFOREACH()
+    
+    IF(NOT DIRS)
+        RETURN()
+    ENDIF()
+
+    LIST(REMOVE_DUPLICATES DIRS)
+    LIST(SORT DIRS)
+    
+    SET(ADDED_DIRS "")
+    FOREACH(DIR ${DIRS})
+        SET(SHOULD_ADD TRUE)
+        FOREACH(PARENT ${ADDED_DIRS})
+            STRING(LENGTH "${PARENT}" PARENT_LEN)
+            STRING(LENGTH "${DIR}" DIR_LEN)
             
-            IF (IDX_DOT EQUAL -1)
-                LIST(APPEND DIRS ${ITEM})
+            # Check if DIR starts with PARENT
+            STRING(SUBSTRING "${DIR}" 0 ${PARENT_LEN} DIR_PREFIX)
+            
+            IF ("${DIR_PREFIX}" STREQUAL "${PARENT}")
+                # Check boundary to ensure it's a real subdirectory
+                IF (DIR_LEN GREATER PARENT_LEN)
+                    STRING(SUBSTRING "${DIR}" ${PARENT_LEN} 1 SEP)
+                    IF ("${SEP}" STREQUAL "/")
+                        SET(SHOULD_ADD FALSE)
+                        BREAK()
+                    ENDIF()
+                ENDIF()
             ENDIF()
-        ENDIF ()
-    ENDFOREACH ()
-    FOREACH (DIR ${DIRS})
-        ADD_SUBDIRECTORY(${DIR})
-    ENDFOREACH ()
+        ENDFOREACH()
+        
+        IF (SHOULD_ADD)
+            LIST(APPEND ADDED_DIRS ${DIR})
+            ADD_SUBDIRECTORY(${DIR})
+        ENDIF()
+    ENDFOREACH()
 ENDFUNCTION()
 
 FUNCTION(GET_TARGET_NAME RST TARGET_PATH)

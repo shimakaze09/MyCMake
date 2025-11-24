@@ -14,18 +14,24 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Download.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Git.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Package.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Qt.cmake")
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/Compiler.cmake")
 
 #DOWNLOAD_FILE(
 #        https://cdn.jsdelivr.net/gh/shimakaze09/MyData@main/MyCMake/CPM/CPM_3b40429.cmake
 #        "${CMAKE_CURRENT_LIST_DIR}/CPM.cmake"
 #        SHA256 438E319D455FD96E18F6CAD9DF596FCD5C9CA3590B1B2EDFA01AF7809CD7BEC7
 #)
-SET(CPM_USE_LOCAL_PACKAGES TRUE CACHE BOOL "" FORCE)
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/CPM.cmake")
 
 # ---------------------------------------------------------
 
 MACRO(INIT_PROJECT)
+    # Only set global defaults if we are the root project
+    IF ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        SET(CPM_USE_LOCAL_PACKAGES TRUE CACHE BOOL "" FORCE)
+        SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    ENDIF()
+
     SET(CMAKE_DEBUG_POSTFIX d)
     SET(CMAKE_MINSIZEREL_POSTFIX msr)
     SET(CMAKE_RELWITHDEBINFO_POSTFIX rd)
@@ -50,30 +56,8 @@ MACRO(INIT_PROJECT)
         $<$<CONFIG:MinSizeRel>:MYCMAKE_CONFIG_POSTFIX="${CMAKE_MINSIZEREL_POSTFIX}">
         $<$<CONFIG:RelWithDebInfo>:MYCMAKE_CONFIG_POSTFIX="${CMAKE_RELWITHDEBINFO_POSTFIX}">
     )
-    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # using Clang
-        MESSAGE(STATUS "Compiler: Clang ${CMAKE_CXX_COMPILER_VERSION}")
-        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10")
-            MESSAGE(FATAL_ERROR "clang (< 10) not support concept")
-            RETURN()
-        ENDIF ()
-    ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        MESSAGE(STATUS "Compiler: GCC ${CMAKE_CXX_COMPILER_VERSION}")
-        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10")
-            MESSAGE(FATAL_ERROR "gcc (< 10) not support concept")
-            RETURN()
-        ENDIF ()
-        # using GCC
-    ELSEIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        # using Visual Studio C++
-        MESSAGE(STATUS "Compiler: MSVC ${CMAKE_CXX_COMPILER_VERSION}")
-        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.26")
-            MESSAGE(FATAL_ERROR "MSVC (< 1926 / 2019 16.6) not support concept")
-            RETURN()
-        ENDIF ()
-    ELSE ()
-        MESSAGE(WARNING "Unknown CMAKE_CXX_COMPILER_ID : ${CMAKE_CXX_COMPILER_ID}")
-    ENDIF ()
+    
+    SETUP_COMPILER()
 
     MESSAGE(STATUS "CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 

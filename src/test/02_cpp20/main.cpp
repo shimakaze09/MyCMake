@@ -6,7 +6,7 @@
 
 template <typename T>
 concept HaveHelloCpp20 = requires(const T& x) {
-  {x.HelloCpp20()};
+  { x.HelloCpp20() };
 };
 
 class Cpp20 {
