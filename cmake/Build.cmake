@@ -6,7 +6,12 @@ FUNCTION(ADD_SUB_DIRS_REC PATH)
     LIST(APPEND CHILDREN "${CMAKE_CURRENT_SOURCE_DIR}/${PATH}")
     FOREACH (ITEM ${CHILDREN})
         IF (IS_DIRECTORY ${ITEM} AND EXISTS "${ITEM}/CMakeLists.txt")
-            LIST(APPEND DIRS ${ITEM})
+            # Ignore hidden directories (like .git, .vs)
+            STRING(FIND "${ITEM}" "/." IDX_DOT)
+            
+            IF (IDX_DOT EQUAL -1)
+                LIST(APPEND DIRS ${ITEM})
+            ENDIF()
         ENDIF ()
     ENDFOREACH ()
     FOREACH (DIR ${DIRS})
@@ -24,7 +29,7 @@ FUNCTION(EXPAND_SOURCES RST SOURCES)
     SET(TMP_RST "")
     FOREACH (ITEM ${${SOURCES}})
         IF (IS_DIRECTORY ${ITEM})
-            FILE(GLOB_RECURSE ITEM_SRCS
+            FILE(GLOB_RECURSE ITEM_SRCS CONFIGURE_DEPENDS
                 # CMake
                 ${ITEM}/*.cmake
 
