@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-int main() {
+int main(void) {
   size_t s = sizeof_MyClass();
   void* addr = malloc(s);
   MyClassHandle h = MyClass_Construct(addr);
